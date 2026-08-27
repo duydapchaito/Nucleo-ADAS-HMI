@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/car">
+        <file>img/car.jpg</file>
+        <file>img/car_black_background.jpg</file>
+        <file>img/car_black.png</file>
+        <file>img/carRED.png</file>
+        <file>img/theme.jpg</file>
+        <file>img/quy.png</file>
+        <file>img/cartet.png</file>
+        <file>img/canhmai.png</file>
+        <file>img/porsche.png</file>
+        <file>../../../../../../G:/download/porsche1.png</file>
+        <file>img/porsche1.png</file>
+    </qresource>
+    <qresource prefix="/"/>
+</RCC>

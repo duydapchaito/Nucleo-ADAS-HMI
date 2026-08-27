@@ -1,0 +1,61 @@
+# =========================
+# STM32 / CubeIDE build outputs
+# =========================
+**/Debug/
+**/Release/
+**/build/
+**/bin/
+**/obj/
+**/out/
+
+# Binary / firmware artifacts
+**/*.elf
+**/*.hex
+**/*.bin
+**/*.axf
+**/*.map
+**/*.lst
+**/*.out
+**/*.o
+**/*.obj
+**/*.a
+**/*.so
+**/*.d
+**/*.su
+**/*.cyclo
+
+# Backup / generated temporary files
+**/Backup/
+**/*.bak
+**/*.orig
+**/*.rej
+**/*.tmp
+**/*.log
+**/*.swp
+**/*.swo
+
+# IDE / OS noise
+**/.settings/
+**/.metadata/
+**/.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# Optional: ignore local tool-generated files not needed for source control
+**/.launch
+**/*.jdebug
+
+# Local configuration files (should not be committed)
+.clangd
+
+# =========================
+# Keep essential STM32 project files tracked
+# =========================
+# Do NOT ignore:
+# - Radar_Core_ECU/
+# - .cproject
+# - .project
+# - .mxproject
+# - .ioc
+# - *.ld
+# - Core/, Drivers/, AppL/, MCAL/, EAL/, Services/

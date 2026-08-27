@@ -1,0 +1,14 @@
+# --- Cấu hình IDE cá nhân ---
+.qtcreator/
+*.user
+CMakeLists.txt.user*
+
+# --- Thư mục Build và Sinh tự động ---
+build/
+Generated/
+build-*/
+out/
+
+# --- File rác hệ điều hành ---
+.DS_Store
+Thumbs.db

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>porsche1.png</file>
+        <file>carRED.png</file>
+        <file>0468e38a-fdaa-4e69-990a-c3627833e7f8.png</file>
+        <file>dashboard_bg.png</file>
+    </qresource>
+</RCC>
