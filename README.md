@@ -1,42 +1,47 @@
-# 🚘 ADAS Ultrasonic Radar ECU & Qt6 HMI
+# Modular ADAS Ultrasonic Radar System
 
-An advanced, AUTOSAR-inspired embedded radar system built on the STM32F446RE platform. This project demonstrates a production-ready approach to embedded software architecture, featuring strict hardware decoupling (Zero-HAL), mathematical signal processing, and a modern C++ desktop companion app.
+A full-stack embedded engineering showcase. This repository demonstrates a production-grade approach to building an Advanced Driver Assistance System (ADAS), bridging a bare-metal, AUTOSAR-inspired STM32 ECU with a high-performance Qt6 desktop dashboard.
 
-## 🌟 Key Features
-*   **Zero-HAL Architecture:** Strict separation of concerns (MCAL, EAL, RTE, AppL). The application layer contains absolute zero hardware-specific code, ensuring seamless migration to RTOS or different MCU vendors.
-*   **Advanced Signal Processing:** 
-    *   Hardware timer-based Input Capture for microsecond-level accuracy.
-    *   3-Stage Pipeline: Outlier Rejection -> Median Filter -> **1D Kalman Filter** for ultra-smooth distance tracking.
-    *   **Sensor Fusion:** Virtual center-point calculation interpolating blind spots between physical corners.
-*   **Robust HMI Input:** Rotary Encoder integration featuring a custom **Software Hysteresis Buffer** to completely eliminate mechanical bounce and jitter during gear shifting (P-R-N-D).
-*   **Non-Blocking Comm:** Direct Memory Access (DMA) driven UART transmission using a custom NMEA-style payload (`$RADAR`) to ensure 0% CPU blocking during data telemetry.
-*   **Qt6 C++ Dashboard:** A CMake-based Qt6 desktop application utilizing `QSerialPort` and Event-Driven parsing for real-time data visualization.
+The core philosophy of this project is **Strict Decoupling**: separating hardware abstractions from pure mathematical logic on the MCU, and isolating raw data processing from the UI rendering on the desktop.
 
-## 🧰 Hardware Topology
-*   **MCU:** STM32 Nucleo-F446RE (Running at 3.3V logic).
-*   **Sensors:** 4x HC-SR04+ Ultrasonic Sensors (Mounted at FL, FR, RL, RR positions). Powered via 3.3V, utilizing STM32 5V-Tolerant (FT) pins for safe Echo capture without voltage dividers.
-*   **Actuators/Inputs:** 
-    *   1x Rotary Encoder (Gear selector) ergonomically placed to prevent sensor interference.
-    *   1x Active Buzzer for dynamic proximity alerts (Variable tick-rates based on danger zones).
+---
 
-## 🧩 Software Architecture Stack
-The firmware is designed using a Lite-AUTOSAR methodology:
-1.  **AppL (Application Layer):** Contains `Swc_AdasWarning` (Kalman logic, Buzzing rules, Gear logic). Pure C/Math, hardware agnostic.
-2.  **RTE (Runtime Environment):** Global data warehouse isolating sensor acquisition from algorithm execution.
-3.  **EAL (ECU Abstraction Layer):** Wraps raw MCAL ticks into logical units (e.g., converting Timer Deltas to Mechanical Steps). 
-4.  **Services:** UART payload packing & transmission.
-5.  **MCAL (Microcontroller Abstraction):** STM32 HAL, NVIC, DMA, and Timer register configurations.
+## System Topology & Data Flow
 
-## ⏱️ Task Scheduling
-Currently operating on a lightweight Bare-metal OS:
-*   **25ms Heartbeat Scheduler:** Triggered via Basic Timer (TIM6).
-*   **Low-Power State:** CPU enters `Wait-For-Interrupt (WFI)` mode during idle cycles to maximize energy efficiency.
-*   *Ready for RTOS migration.*
+The system operates on a "Smart Backend - Dumb UI" paradigm, communicating via a custom, lightweight NMEA-style telemetry protocol (`$RADAR`).
 
-## 💻 Building the Qt6 HMI
-The desktop application is built with modern C++17 and CMake.
-```bash
-cd Qt_RadarHMI
-mkdir build && cd build
-cmake ..
-cmake --build .
+```
++-------------------------+                                +-------------------------+
+|     STM32 ECU (Core)    |                                |   Qt6 Dashboard (HMI)   |
+|-------------------------|                                |-------------------------|
+| - Lite-AUTOSAR Stack    |      $RADAR Protocol           | - Event-Driven Parsing  |
+| - 1D Kalman Filtering   |   =======================>     | - QSerialPort Async     |
+| - Sensor Fusion         |      (UART over DMA)           | - Custom QQuickItem     |
+| - Zero-HAL Application  |                                | - 60FPS UI Rendering    |
++-------------------------+                                +-------------------------+
+```
+
+## Repository Navigation
+Detailed technical documentation, architectural breakdowns, and build instructions are localized within their respective subsystem directories:
+
+### 1. Embedded Firmware (STM32)
+The "Brain" of the system. Written in C, featuring a 25ms heartbeat scheduler, hardware-agnostic application layer (Zero-HAL), and pure mathematical DSP (Digital Signal Processing) for ultrasonic noise rejection. Read the [Firmware Architecture Docs](STM32/README.md) here.
+
+### 2. Instrument Cluster HMI (Qt6 / C++)
+The "Face" of the system. A cross-platform desktop application acting as a real-time Instrument Cluster. It features automated COM-port detection, hardware-accelerated radar arcs, and dynamic reverse-camera integration. Read the [HMI Architecture & Build Guide](Qt/README.md) here.
+
+## Engineering Highlights
+*   **Architectural Discipline:** Strict separation of concerns across the entire stack (MCAL -> ECUAL -> RTE -> AppL -> UI).
+*   **Zero-Blocking Telemetry:** Utilizing Direct Memory Access (DMA) on the MCU and Asynchronous OS-level interrupts (`readyRead`) on the PC to ensure 0% CPU blockage during data transmission.
+*   **Algorithmic Debouncing:** Replacing traditional `if-else` delay traps with Mathematical Hysteresis Buffers to handle mechanical rotary encoder jitter.
+
+## Future Roadmap (Next Phase)
+The architecture is designed to be highly scalable. Upcoming milestones include:
+
+*   [ ] Migration from UART to CAN Bus physical layer.
+
+*   [ ] Implementation of ISO 15765-2 (CAN-TP) for PDU segmentation.
+
+*   [ ] Integration of a Lite DCM (Diagnostic Communication Manager) handling ISO 14229 (UDS) services.
+
+*   [ ] Migration from Bare-metal scheduler to FreeRTOS.

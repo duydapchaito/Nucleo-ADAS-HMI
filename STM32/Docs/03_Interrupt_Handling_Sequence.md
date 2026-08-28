@@ -1,3 +1,8 @@
+# 3. Cơ chế Xử lý Ngắt (Interrupt Handling Sequence)
+
+Để đảm bảo tính độc lập (Decoupling) tuyệt đối, MCAL không được phép gọi ngược (include) các hàm của tầng trên. Dự án sử dụng cơ chế **Function Pointer (Con trỏ hàm)** để đăng ký và định tuyến tín hiệu ngắt.
+
+### Giai đoạn Khởi tạo (Initialization Phase)
 ```
 [ IDE Gen Code ]           [ TẦNG ECUAL ]                     [ TẦNG MCAL ]
     main.c                  EcuAb_Radar.c                     Mcal_Timer.c
@@ -17,7 +22,7 @@
       |                           |                                 | (App_IC_Callback = ptr)
 ```
 
-
+### Giai đoạn Thực thi Ngắt (Runtime Execution Phase)
 ```
 [ PHẦN CỨNG ]      [ IDE Gen Code ]             [ TẦNG MCAL ]             [ TẦNG ECUAL ]
  Hardware IT        stm32f4xx_it.c              Mcal_Timer.c               EcuAb_Radar.c

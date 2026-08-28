@@ -14,6 +14,30 @@ SerialController::SerialController(QObject *parent)
         );
 
     scanPorts();
+
+    // ============================================================
+    // AUTO-CONNECT: Tự động đánh hơi cổng UART của STM32
+    // ============================================================
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos) {
+        QString desc = info.description().toLower();
+        QString mfg = info.manufacturer().toLower();
+
+        // Lọc các từ khóa đặc trưng của mạch Nucleo ST-Link hoặc cáp USB-UART
+        if (desc.contains("stlink") || mfg.contains("stmicroelectronics") ||
+            desc.contains("cp210") || desc.contains("ch340") ||
+            desc.contains("ftdi") || desc.contains("usb serial"))
+        {
+            qDebug() << "Auto-detected Radar on:" << info.portName() << "-" << info.description();
+
+            connectPort(info.portName(), 115200);
+
+            // Nếu mở thành công thì thoát vòng lặp luôn, không cần tìm nữa
+            if (serial.isOpen()) {
+                break;
+            }
+        }
+    }
 }
 
 
@@ -273,25 +297,6 @@ void SerialController::readData()
 
             continue;
         }
-
-
-        // ====================================================
-        // LIMIT ALERT LEVEL
-        //
-        // -1 = hidden
-        //  0 = SAFE
-        //  1 = WARNING
-        //  2 = DANGER
-        // ====================================================
-
-        fl = qBound(0, fl, 2);
-        fc = qBound(0, fc, 2);
-        fr = qBound(0, fr, 2);
-
-        rl = qBound(0, rl, 2);
-        rc = qBound(0, rc, 2);
-        rr = qBound(0, rr, 2);
-
 
         // ====================================================
         // FRONT LEFT

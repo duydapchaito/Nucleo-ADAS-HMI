@@ -117,7 +117,7 @@ Rectangle {
             anchors.bottomMargin: -40
             anchors.horizontalCenter: carBody.horizontalCenter
             direction: 0 // FRONT CENTER
-            alertLevel: root.displayFrontCenter // Sửa distance -> alertLevel
+            distance: root.displayFrontCenter
         }
 
         SensorSurCar {
@@ -127,7 +127,7 @@ Rectangle {
             anchors.right: carBody.left
             anchors.rightMargin: -40
             direction: 4 // FRONT LEFT
-            alertLevel: root.displayFrontLeft
+            distance: root.displayFrontLeft
         }
 
         SensorSurCar {
@@ -137,7 +137,7 @@ Rectangle {
             anchors.left: carBody.right
             anchors.leftMargin: -40
             direction: 5 // FRONT RIGHT
-            alertLevel: root.displayFrontRight
+            distance: root.displayFrontRight
         }
 
         // =========================================================
@@ -149,7 +149,7 @@ Rectangle {
             anchors.topMargin: -40
             anchors.horizontalCenter: carBody.horizontalCenter
             direction: 1 // REAR CENTER
-            alertLevel: root.displayRearCenter
+            distance: root.displayRearCenter
         }
 
         SensorSurCar {
@@ -159,7 +159,7 @@ Rectangle {
             anchors.right: carBody.left
             anchors.rightMargin: -40
             direction: 6 // REAR LEFT
-            alertLevel: root.displayRearLeft
+            distance: root.displayRearLeft
         }
 
         SensorSurCar {
@@ -169,7 +169,7 @@ Rectangle {
             anchors.left: carBody.right
             anchors.leftMargin: -40
             direction: 7 // REAR RIGHT
-            alertLevel: root.displayRearRight
+            distance: root.displayRearRight
         }
     }
 }

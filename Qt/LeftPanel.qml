@@ -25,6 +25,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 180
             Layout.minimumHeight: 160
+            gear: root.gear
         }
 
         GridLayout {
@@ -67,7 +68,7 @@ Rectangle {
 
 
 
-           alertFrontLeft: root.alertFront
+           alertFrontLeft: root.alertFrontLeft
            alertFrontRight: root.alertFrontRight
            alertFrontCenter: root.alertFrontCenter
            alertRearLeft: root.alertRearLeft

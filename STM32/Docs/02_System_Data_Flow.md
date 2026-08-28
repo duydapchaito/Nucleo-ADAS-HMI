@@ -1,10 +1,14 @@
+# 2. Mô hình Luồng Dữ liệu (System Data Flow)
+
+Hệ thống hoạt động dựa trên sự phân tách rạch ròi giữa luồng thu thập dữ liệu bất đồng bộ (Asynchronous Hardware IT) và luồng xử lý đồng bộ (Synchronous Task 25ms). Tầng **RTE** đóng vai trò là Data Warehouse trung tâm.
+
 ```
 [GIAO DIỆN UI - Desktop Qt C++]
             ^ (NMEA Data)
             |
 ================================================================================
                            TẦNG ỨNG DỤNG (AppL)
-                 (Chủ thể: Vòng lặp main() - Synchronous)
+                 (Chủ thể: Vòng lặp main() / RTOS Task - Synchronous)
                  
     [Swc_HmiRouter]  <------------------------->  [Swc_AdasWarning]
            |                                             | (Ra quyết định)

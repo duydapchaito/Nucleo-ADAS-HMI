@@ -1,3 +1,7 @@
+# 1. Cấu trúc Phân tầng Kiến trúc (Architecture Layers)
+
+Dự án áp dụng tư duy phân tầng lấy cảm hứng từ AUTOSAR (Lite-AUTOSAR), hướng tới mục tiêu **Zero-HAL** tại tầng ứng dụng. Toàn bộ mã nguồn được quy hoạch thành các module độc lập:
+
 ```
 Project_Root/
 ├── Core/                      (Code do CubeMX sinh ra, chứa main.c "rỗng" để gọi Boot)
@@ -12,29 +16,29 @@ Project_Root/
 ├── ECUAL/                     (ECU Abstraction Layer - IoHwAb)
 │   ├── Inc/
 │   │   ├── Eal_Buzzer.h     (Định nghĩa còi kêu/tắt dựa trên Mcal_Dio)
-│   │   ├── Eal_RadarHw.h    (Chỉ quản lý việc phát xung Trigger và nhận ngắt Echo)
+│   │   ├── Eal_RadarHw.h    (Quản lý phát xung Trigger và nhận ngắt Echo)
 │   │   └── Eal_Encoder.h    (Quản lý đọc Delta đếm xung vật lý)
 │   └── Src/ ...
 │
-├── Services/                       (Basic Software - Tầng Dịch vụ Hệ thống)
+├── Services/                  (Basic Software - Tầng Dịch vụ Hệ thống)
 │   ├── Inc/
-│   │   └── Com_Uart_If.h      (Giao tiếp UART mức logic, sau này đổi thành CanIf, CanTp, Dcm/UDS ở đây)
+│   │   └── Com_Uart_If.h      (Giao tiếp UART mức logic - Dọn đường cho CanIf/UDS)
 │   └── Src/ ...
 │
 ├── CDD_MathLibs/              (Complex Device Drivers / Pure Math - Tầng tính toán)
 │   ├── Inc/
-│   │   ├── Lib_Filter.h       (Thuật toán Kalman, EMA - C thuần 100%, không biết phần cứng là gì)
+│   │   ├── Lib_Filter.h       (Thuật toán Kalman, EMA - C thuần 100%, độc lập phần cứng)
 │   │   └── Lib_Fusion.h       (Toán học nội suy góc chéo)
 │   └── Src/ ...
 │
-├── RTE/                       (Runtime Environment - Môi trường thực thi & Định tuyến)
+├── RTE/                       (Runtime Environment - Môi trường Môi giới)
 │   ├── Inc/
-│   │   └── Rte_Radar.h        (Chứa Shadow Buffers, Cờ đồng bộ 2 pha quét, biến trạng thái)
+│   │   └── Rte_Radar.h        (Chứa Shadow Buffers, Cờ đồng bộ 2 pha quét, trạng thái toàn cục)
 │   └── Src/ ...
 │
 └── AppL/                      (Application Layer - Khối nghiệp vụ cốt lõi)
     ├── Inc/
-    │   ├── Swc_AdasWarning.h  (Software Component: Rút data từ RTE, tính toán ngữ cảnh, ra lệnh cho EcuAb_Buzzer)
+    │   ├── Swc_AdasWarning.h  (Software Component: Rút data từ RTE, tính toán ngữ cảnh, kích hoạt Buzzer)
     │   └── Swc_HmiRouter.h    (Software Component: Rút data từ RTE, ép chuỗi, đẩy xuống BSW_Com)
     └── Src/ ...
 ```

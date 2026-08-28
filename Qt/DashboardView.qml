@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import QtMultimedia 6.5
 
 Rectangle {
     id: root
@@ -18,25 +19,28 @@ Rectangle {
         opacity: 0.48
     }
 
+    MediaDevices {
+        id: mediaDevices
+    }
+
+    CameraView {
+        anchors.fill: parent
+        activeCamDevice: mediaDevices.defaultVideoInput
+        visible: root.gear === "R"
+        z: 1
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#020817"
         opacity: 0.48
+        z: 2
     }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 28
         spacing: 20
-
-        // Text {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     text: "PARKING ASSIST"
-        //     color: "#19BFFF"
-        //     font.pixelSize: 24
-        //     font.bold: true
-        //     font.letterSpacing: 2
-        // }
 
         Rectangle {
             Layout.fillWidth: true
@@ -126,15 +130,5 @@ Rectangle {
             }
         }
 
-        // RowLayout {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 80
-        //     spacing: 12
-
-        //     DashboardTile { title: "Dashboard"; icon: "◉" }
-        //     DashboardTile { title: "Camera"; icon: "▣" }
-        //     DashboardTile { title: "Cài đặt"; icon: "⚙" }
-        //     DashboardTile { title: "Lịch sử"; icon: "◴" }
-        // }
     }
 }
