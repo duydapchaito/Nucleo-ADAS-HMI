@@ -16,9 +16,9 @@
 #define CALIB_KALMAN_P_INIT     1.0f    // Sai số dự đoán ban đầu
 #define CALIB_KALMAN_X_INIT     400.0f  // Khởi tạo an toàn tại Max Range (cm)
 
-#define ALERT_ZONE_DANGER       50      // Khoảng cách nguy hiểm (cm) -> Kêu liên tục
-#define ALERT_ZONE_WARNING      100     // Khoảng cách cảnh báo (cm) -> Bíp nhanh
-#define ALERT_ZONE_ATTENTION    150     // Khoảng cách chú ý (cm) -> Bíp chậm
+#define ALERT_ZONE_DANGER       30      // Khoảng cách nguy hiểm (cm) -> Kêu liên tục
+#define ALERT_ZONE_WARNING      50     // Khoảng cách cảnh báo (cm) -> Bíp nhanh
+#define ALERT_ZONE_ATTENTION    100     // Khoảng cách chú ý (cm) -> Bíp chậm
 // =========================================================
 
 // Khai báo các bộ lọc tĩnh cho 4 cảm biến vật lý

@@ -26,13 +26,19 @@ Rectangle {
     // =====================================================
     // 2. MASK ẨN/HIỆN THEO CẦN SỐ (GEAR)
     // =====================================================
-    property real displayFrontLeft:   (gear === "R") ? -1 : alertFrontLeft
-    property real displayFrontCenter: (gear === "R") ? -1 : alertFrontCenter
-    property real displayFrontRight:  (gear === "R") ? -1 : alertFrontRight
+    // Luật hiển thị:
+    // - Gear P: Ẩn TOÀN BỘ (-1) để tránh làm ồn khi đã đỗ xe
+    // - Gear N: Hiện TOÀN BỘ (Lấy trực tiếp data cảm biến)
+    // - Gear R: Ẩn phía Trước (-1), Hiện phía Sau
+    // - Gear D: Ẩn phía Sau (-1), Hiện phía Trước
+    property real displayFrontLeft:   (gear === "P" || gear === "R") ? -1 : alertFrontLeft
+    property real displayFrontCenter: (gear === "P" || gear === "R") ? -1 : alertFrontCenter
+    property real displayFrontRight:  (gear === "P" || gear === "R") ? -1 : alertFrontRight
 
-    property real displayRearLeft:    (gear === "D") ? -1 : alertRearLeft
-    property real displayRearCenter:  (gear === "D") ? -1 : alertRearCenter
-    property real displayRearRight:   (gear === "D") ? -1 : alertRearRight
+    property real displayRearLeft:    (gear === "P" || gear === "D") ? -1 : alertRearLeft
+    property real displayRearCenter:  (gear === "P" || gear === "D") ? -1 : alertRearCenter
+    property real displayRearRight:   (gear === "P" || gear === "D") ? -1 : alertRearRight
+
 
     // =====================================================
     // 3. TÍNH KHOẢNG CÁCH NHỎ NHẤT ĐỂ HIỂN THỊ TRẠNG THÁI
@@ -47,9 +53,9 @@ Rectangle {
     )
 
     function statusText() {
-        if (minimumDistance <= 20) return "▲ DANGER"
-        if (minimumDistance <= 40) return "⚠ WARNING"
-        if (minimumDistance <= 80) return "✓ SAFE"
+        if (minimumDistance <= 30) return "▲ DANGER"
+        if (minimumDistance <= 50) return "⚠ WARNING"
+        if (minimumDistance <= 100) return "✓ SAFE"
         return "READY"
     }
 
