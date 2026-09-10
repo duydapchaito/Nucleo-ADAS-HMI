@@ -18,12 +18,10 @@ Rectangle {
 
         anchors.left: parent.left
         anchors.top: parent.top
-
         anchors.leftMargin: 14
         anchors.topMargin: 10
 
         text: "♧  TPMS"
-
         color: "#B4C4D6"
 
         font.pixelSize: 12
@@ -32,7 +30,7 @@ Rectangle {
     }
 
     // =====================================================
-    // CAR
+    // CAR AREA
     // =====================================================
 
     Item {
@@ -40,170 +38,120 @@ Rectangle {
 
         anchors.left: parent.left
         anchors.right: parent.right
-
         anchors.top: title.bottom
         anchors.bottom: parent.bottom
 
         anchors.topMargin: 4
         anchors.bottomMargin: 8
 
-        // ---------------- CAR BODY ----------------
+        // =================================================
+        // CAR IMAGE
+        // =================================================
 
-        Rectangle {
-            id: car
+        Image {
+            id: carImage
 
             anchors.centerIn: parent
 
+            // Giới hạn theo cả width và height
             width: Math.min(
-                parent.width * 0.20,
-                60
-            )
+                       parent.width * 0.30,
+                       parent.height * 0.72,
+                       85
+                   )
 
             height: Math.min(
-                parent.height * 0.78,
-                115
-            )
+                        parent.height * 0.78,
+                        130
+                    )
 
-            radius: width * 0.45
+            source: "qrc:/tpms.png"
 
-            color: "#778391"
-
-            border.color: "#AEB8C3"
-            border.width: 1.5
-
-            // Inner cabin
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                anchors.leftMargin: width * 0.10
-                anchors.rightMargin: width * 0.10
-
-                y: parent.height * 0.20
-
-                height: parent.height * 0.60
-
-                radius: width * 0.30
-
-                color: "#101821"
-            }
-
-            // =================================================
-            // TIRES
-            // =================================================
-
-            Rectangle {
-                x: -width * 0.12
-                y: parent.height * 0.18
-
-                width: parent.width * 0.16
-                height: parent.height * 0.20
-
-                radius: 4
-
-                color: "#16A765"
-            }
-
-            Rectangle {
-                x: parent.width * 0.96
-                y: parent.height * 0.18
-
-                width: parent.width * 0.16
-                height: parent.height * 0.20
-
-                radius: 4
-
-                color: "#16A765"
-            }
-
-            Rectangle {
-                x: -width * 0.12
-                y: parent.height * 0.62
-
-                width: parent.width * 0.16
-                height: parent.height * 0.20
-
-                radius: 4
-
-                color: "#16A765"
-            }
-
-            Rectangle {
-                x: parent.width * 0.96
-                y: parent.height * 0.62
-
-                width: parent.width * 0.16
-                height: parent.height * 0.20
-
-                radius: 4
-
-                color: "#16A765"
-            }
+            fillMode: Image.PreserveAspectFit
+            smooth: true
         }
 
-        // =====================================================
-        // TOP LEFT
-        // =====================================================
+        // =================================================
+        // SENSOR POSITIONS
+        // =================================================
+
+        // Khoảng cách giữa thông số và xe
+        readonly property real valueGap: 8
+
+        // Khoảng cách từ mép panel
+        readonly property real sideMargin: 8
+
+        // =================================================
+        // FRONT LEFT
+        // =================================================
 
         TpmsValue {
             id: frontLeft
 
-            anchors.right: car.left
-            anchors.rightMargin: 4
+            width: Math.min(carArea.width * 0.27, 80)
 
-            anchors.verticalCenter: car.top
-            anchors.verticalCenterOffset: car.height * 0.22
+            anchors.right: carImage.left
+            anchors.rightMargin: carArea.valueGap
+
+            anchors.verticalCenter: carImage.top
+            anchors.verticalCenterOffset: carImage.height * 0.22
 
             pressure: "2.4"
             temperature: "28°C"
         }
 
-        // =====================================================
-        // TOP RIGHT
-        // =====================================================
+        // =================================================
+        // FRONT RIGHT
+        // =================================================
 
         TpmsValue {
             id: frontRight
 
-            anchors.left: car.right
-            anchors.leftMargin: 4
+            width: Math.min(carArea.width * 0.27, 80)
 
-            anchors.verticalCenter: car.top
-            anchors.verticalCenterOffset: car.height * 0.22
+            anchors.left: carImage.right
+            anchors.leftMargin: carArea.valueGap
+
+            anchors.verticalCenter: carImage.top
+            anchors.verticalCenterOffset: carImage.height * 0.22
 
             pressure: "2.5"
             temperature: "27°C"
         }
 
-        // =====================================================
-        // BOTTOM LEFT
-        // =====================================================
+        // =================================================
+        // REAR LEFT
+        // =================================================
 
         TpmsValue {
             id: rearLeft
 
-            anchors.right: car.left
-            anchors.rightMargin: 4
+            width: Math.min(carArea.width * 0.27, 80)
 
-            anchors.verticalCenter: car.bottom
-            anchors.verticalCenterOffset: -car.height * 0.12
+            anchors.right: carImage.left
+            anchors.rightMargin: carArea.valueGap
+
+            anchors.verticalCenter: carImage.bottom
+            anchors.verticalCenterOffset: -carImage.height * 0.22
 
             pressure: "2.4"
             temperature: "27°C"
         }
 
-        // =====================================================
-        // BOTTOM RIGHT
-        // =====================================================
+        // =================================================
+        // REAR RIGHT
+        // =================================================
 
         TpmsValue {
             id: rearRight
 
-            anchors.left: car.right
-            anchors.leftMargin: 4
+            width: Math.min(carArea.width * 0.27, 80)
 
-            anchors.verticalCenter: car.bottom
-            anchors.verticalCenterOffset: -car.height * 0.22
+            anchors.left: carImage.right
+            anchors.leftMargin: carArea.valueGap
+
+            anchors.verticalCenter: carImage.bottom
+            anchors.verticalCenterOffset: -carImage.height * 0.22
 
             pressure: "2.5"
             temperature: "28°C"

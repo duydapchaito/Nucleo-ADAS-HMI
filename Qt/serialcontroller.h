@@ -189,7 +189,7 @@ private:
     // DATA
     // =====================================================
 
-    QString m_gear = "P";
+    QString m_gear = "R";
 
 
     // Front
