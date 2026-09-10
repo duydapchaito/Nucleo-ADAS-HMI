@@ -55,6 +55,9 @@ qt_add_qml_module(appParking_Sensor
         RESOURCES HMI_Architecture.md
         RESOURCES README.md
         QML_FILES
+SOURCES main.cpp SensorSurCar.cpp SensorSurCar.h serialcontroller.cpp serialcontroller.h
+RESOURCES HMI_Architecture.md
+QML_FILES CameraSelector.qml CameraView.qml CarWithSensors.qml  CustomIcons.qml DashboardTile.qml DashboardView.qml DistanceInfo.qml GearStatus.qml HmiFooter.qml HmiHeader.qml InfoRow.qml LeftPanel.qml Main.qml MusicPlayer.qml Mybutton.qml PanelHeader.qml ParkingSensorPanel.qml SonarArcs.qml SonarWave.qml TPMS.qml TpmsValue.qml VehicleInfo.qml VehicleState.qml WeatherMetric.qml WeatherPanel.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
