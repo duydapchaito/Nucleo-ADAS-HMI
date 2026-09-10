@@ -5,34 +5,45 @@ Rectangle {
     id: root
 
     radius: 18
-    color: "#101C2B"
-    border.color: "#203650"
-    border.width: 1
+    color: "#0D141E"
+    border.color: "#1E2F45"
+    border.width: 1.5
 
     // =====================================================
     // HEADER
     // =====================================================
 
-    Text {
-        id: title
+    RowLayout {
+        id: headerLayout
 
         anchors.left: parent.left
         anchors.top: parent.top
+        anchors.leftMargin: 16
+        anchors.topMargin: 12
 
-        anchors.leftMargin: 14
-        anchors.topMargin: 10
+        spacing: 6
 
-        text: "♧  TPMS"
+        Rectangle {
+            width: 8
+            height: 8
+            radius: 4
+            color: "#00E5FF"
+        }
 
-        color: "#B4C4D6"
+        Text {
+            text: "TPMS MONITOR"
 
-        font.pixelSize: 12
-        font.bold: true
-        font.letterSpacing: 0.8
+            color: "#8E9EAF"
+
+            font.pixelSize: 12
+            font.bold: true
+            font.letterSpacing: 1.2
+        }
     }
 
+
     // =====================================================
-    // CAR
+    // MAIN TPMS AREA
     // =====================================================
 
     Item {
@@ -40,173 +51,217 @@ Rectangle {
 
         anchors.left: parent.left
         anchors.right: parent.right
-
-        anchors.top: title.bottom
+        anchors.top: headerLayout.bottom
         anchors.bottom: parent.bottom
 
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
         anchors.topMargin: 4
         anchors.bottomMargin: 8
 
-        // ---------------- CAR BODY ----------------
 
-        Rectangle {
-            id: car
+        // =================================================
+        // CAR IMAGE
+        // =================================================
+
+        Image {
+            id: carImage
 
             anchors.centerIn: parent
 
-            width: Math.min(
-                parent.width * 0.20,
-                60
-            )
+            // Xe lớn hơn trước
+            width: Math.min(parent.width * 0.30, 200)
+            height: parent.height * 0.90
 
-            height: Math.min(
-                parent.height * 0.78,
-                115
-            )
+            source: "qrc:/tpms-cr.png"
 
-            radius: width * 0.45
+            fillMode: Image.PreserveAspectFit
 
-            color: "#778391"
+            smooth: true
+            mipmap: true
+        }
 
-            border.color: "#AEB8C3"
-            border.width: 1.5
 
-            // Inner cabin
+        // =================================================
+        // TPMS VALUE COMPONENT
+        // =================================================
+
+        component TpmsValue: Item {
+
+            property string pressure: "0.0"
+            property string temperature: "0°C"
+            property color statusColor: "#00E5FF"
+
+            // Kích thước theo nội dung
+            width: 78
+            height: 48
+
+
+            // ---------------------------------------------
+            // STATUS BAR
+            // ---------------------------------------------
+
             Rectangle {
+                id: statusBar
+
+                width: 3
+                height: 25
+
+                radius: 1.5
+
+                color: statusColor
+
                 anchors.left: parent.left
-                anchors.right: parent.right
-
-                anchors.leftMargin: width * 0.10
-                anchors.rightMargin: width * 0.10
-
-                y: parent.height * 0.20
-
-                height: parent.height * 0.60
-
-                radius: width * 0.30
-
-                color: "#101821"
+                anchors.verticalCenter: parent.verticalCenter
             }
 
-            // =================================================
-            // TIRES
-            // =================================================
 
-            Rectangle {
-                x: -width * 0.12
-                y: parent.height * 0.18
+            // ---------------------------------------------
+            // VALUE AREA
+            // ---------------------------------------------
 
-                width: parent.width * 0.16
-                height: parent.height * 0.20
+            Column {
+                id: valueColumn
 
-                radius: 4
+                anchors.left: statusBar.right
+                anchors.leftMargin: 7
 
-                color: "#16A765"
-            }
+                anchors.verticalCenter: parent.verticalCenter
 
-            Rectangle {
-                x: parent.width * 0.96
-                y: parent.height * 0.18
+                spacing: 0
 
-                width: parent.width * 0.16
-                height: parent.height * 0.20
 
-                radius: 4
+                // -----------------------------------------
+                // PRESSURE
+                // -----------------------------------------
 
-                color: "#16A765"
-            }
+                Row {
+                    spacing: 2
 
-            Rectangle {
-                x: -width * 0.12
-                y: parent.height * 0.62
+                    Text {
+                        text: pressure
 
-                width: parent.width * 0.16
-                height: parent.height * 0.20
+                        color: "#FFFFFF"
 
-                radius: 4
+                        font.pixelSize: 14
+                        font.bold: true
+                        font.family: "Roboto"
+                    }
 
-                color: "#16A765"
-            }
+                    Text {
+                        text: "Bar"
 
-            Rectangle {
-                x: parent.width * 0.96
-                y: parent.height * 0.62
+                        color: "#6C7D93"
 
-                width: parent.width * 0.16
-                height: parent.height * 0.20
+                        font.pixelSize: 10
+                        font.bold: true
 
-                radius: 4
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 2
+                    }
+                }
 
-                color: "#16A765"
+
+                // -----------------------------------------
+                // TEMPERATURE
+                // -----------------------------------------
+
+                Text {
+                    text: temperature
+
+                    color: "#00E5FF"
+
+                    font.pixelSize: 11
+                    font.bold: true
+                }
             }
         }
 
-        // =====================================================
-        // TOP LEFT
-        // =====================================================
+
+        // =================================================
+        // FRONT LEFT
+        // =================================================
 
         TpmsValue {
             id: frontLeft
 
-            anchors.right: car.left
-            anchors.rightMargin: 4
+            anchors.right: carImage.left
 
-            anchors.verticalCenter: car.top
-            anchors.verticalCenterOffset: car.height * 0.22
+            // Không sát xe quá
+            anchors.rightMargin: -8
+
+            // Vị trí phía trước
+            anchors.verticalCenter: carImage.top
+
+            anchors.verticalCenterOffset: carImage.height * 0.28
 
             pressure: "2.4"
             temperature: "28°C"
+
+            statusColor: "#00E5FF"
         }
 
-        // =====================================================
-        // TOP RIGHT
-        // =====================================================
+
+        // =================================================
+        // FRONT RIGHT
+        // =================================================
 
         TpmsValue {
             id: frontRight
 
-            anchors.left: car.right
-            anchors.leftMargin: 4
+            anchors.left: carImage.right
+            anchors.leftMargin: 5
 
-            anchors.verticalCenter: car.top
-            anchors.verticalCenterOffset: car.height * 0.22
+            anchors.verticalCenter: carImage.top
+
+            anchors.verticalCenterOffset: carImage.height * 0.28
 
             pressure: "2.5"
             temperature: "27°C"
+
+            statusColor: "#00E5FF"
         }
 
-        // =====================================================
-        // BOTTOM LEFT
-        // =====================================================
+
+        // =================================================
+        // REAR LEFT
+        // =================================================
 
         TpmsValue {
             id: rearLeft
 
-            anchors.right: car.left
-            anchors.rightMargin: 4
+            anchors.right: carImage.left
+            anchors.rightMargin: -8
 
-            anchors.verticalCenter: car.bottom
-            anchors.verticalCenterOffset: -car.height * 0.12
+            anchors.verticalCenter: carImage.bottom
+
+            anchors.verticalCenterOffset: -carImage.height * 0.28
 
             pressure: "2.4"
             temperature: "27°C"
+
+            statusColor: "#00E5FF"
         }
 
-        // =====================================================
-        // BOTTOM RIGHT
-        // =====================================================
+
+        // =================================================
+        // REAR RIGHT
+        // =================================================
 
         TpmsValue {
             id: rearRight
 
-            anchors.left: car.right
-            anchors.leftMargin: 4
+            anchors.left: carImage.right
+            anchors.leftMargin: 5
 
-            anchors.verticalCenter: car.bottom
-            anchors.verticalCenterOffset: -car.height * 0.22
+            anchors.verticalCenter: carImage.bottom
+
+            anchors.verticalCenterOffset: -carImage.height * 0.28
 
             pressure: "2.5"
             temperature: "28°C"
+
+            statusColor: "#00E5FF"
         }
     }
 }
