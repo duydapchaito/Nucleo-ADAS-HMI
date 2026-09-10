@@ -9,7 +9,6 @@ Item {
     property var activeCamDevice
     property real steeringAngle: 0.0
 
-    // Sử dụng ColumnLayout để chia màn hình thành 2 phần riêng biệt
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -20,7 +19,7 @@ Item {
         Rectangle {
             id: videoContainer
             Layout.fillWidth: true
-            Layout.fillHeight: true // Tự động chiếm toàn bộ chiều cao còn lại
+            Layout.fillHeight: true
             clip: true
             radius: 5
             color: "black"
@@ -112,7 +111,6 @@ Item {
                 z: 4
             }
         }
-<<<<<<< HEAD
 
         // ==========================================
         // 2. KHUNG PANEL DÀN ĐỀU ICON (PHÍA DƯỚI)
@@ -120,76 +118,8 @@ Item {
         Rectangle {
             id: bottomPanel
             Layout.fillWidth: true
-            Layout.preferredHeight: 60 // Độ cao cố định của khung panel dưới
-            color: "#0D0E12"           // Màu nền tối tách biệt hoàn toàn
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 0
-
-                ListModel {
-                    id: iconModel
-                    ListElement { iconName: "back"; iconPath: "qrc:/assets/icons/back.svg" }
-                    ListElement { iconName: "mode2d"; iconPath: "qrc:/assets/icons/2d.svg" }
-                    ListElement { iconName: "radar"; iconPath: "qrc:/assets/icons/radar.svg" }
-                    ListElement { iconName: "tow"; iconPath: "qrc:/assets/icons/tow.svg" }
-                    ListElement { iconName: "cam_side_left"; iconPath: "qrc:/assets/icons/cam_left.svg" }
-                    ListElement { iconName: "cam_side_right"; iconPath: "qrc:/assets/icons/cam_right.svg" }
-                    ListElement { iconName: "cam_360"; iconPath: "qrc:/assets/icons/cam_360.svg" }
-                    ListElement { iconName: "settings"; iconPath: "qrc:/assets/icons/settings.svg" }
-                    ListElement { iconName: "recording"; iconPath: "qrc:/assets/icons/recording.svg" }
-                }
-
-                Repeater {
-                    model: iconModel
-                    delegate: Rectangle {
-                        // Thiết lập co giãn đều theo chiều ngang
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        color: btnMouse.containsPress ? "#33FFFFFF" : (btnMouse.containsMouse ? "#11FFFFFF" : "transparent")
-
-                        // Đường kẻ gạch đứng phân cách giữa các icon
-                        Rectangle {
-                            width: 1
-                            height: parent.height * 0.4
-                            color: "#22FFFFFF"
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: index < iconModel.count - 1
-                        }
-
-                        Image {
-                            anchors.centerIn: parent
-                            width: 24
-                            height: 24
-                            source: model.iconPath
-                            fillMode: Image.PreserveAspectFit
-                        }
-
-                        MouseArea {
-                            id: btnMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                console.log("Selected option:", model.iconName)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-=======
-
-        // ==========================================
-        // 2. KHUNG PANEL DÀN ĐỀU ICON (PHÍA DƯỚI)
-        // ==========================================
-        Rectangle {
-            id: bottomPanel
-            Layout.fillWidth: true
-            Layout.preferredHeight: 75 // Độ cao cố định của khung panel dưới
-            color: "#0D0E12"           // Màu nền tối tách biệt hoàn toàn
+            Layout.preferredHeight: 75
+            color: "#0D0E12"
 
             RowLayout {
                 anchors.fill: parent
@@ -199,13 +129,13 @@ Item {
                     id: iconModel
                     ListElement { iconName: "back"; iconPath: "qrc:/back.png" }
                     ListElement { iconName: "mode2d"; iconPath: "qrc:/SurroundView.png" }
-                    ListElement { iconName: "radar"; iconPath: "qrc:/frontsensor.png" }
-                    ListElement { iconName: "tow"; iconPath: "qrc:/backsensor.png" }
+                    ListElement { iconName: "radar"; iconPath: "qrc:/FrontView.png" }
+                    ListElement { iconName: "tow"; iconPath: "qrc:/RearView.png" }
                     ListElement { iconName: "cam_side_left"; iconPath: "qrc:/LeftView.png" }
-                    ListElement { iconName: "cam_side_right"; iconPath: "qrc:/Gemini_Generated_Image_zd75fvzd75fvzd75.png" }
+                    ListElement { iconName: "cam_side_right"; iconPath: "qrc:/RightView.png" }
                     ListElement { iconName: "cam_360"; iconPath: "qrc:/sensor360.png" }
-                    ListElement { iconName: "settings"; iconPath: "qrc:/Gemini_Generated_Image_car5zocar5zocar5-Picsart-BackgroundRemover.png" }
-                    ListElement { iconName: "recording"; iconPath: "qrc:/Gemini_Generated_Image_w3m46yw3m46yw3m4-Picsart-BackgroundRemover.png" }
+                    ListElement { iconName: "settings"; iconPath: "qrc:/CarSettings.png" }
+                    ListElement { iconName: "recording"; iconPath: "qrc:/CarRecording.png" }
                 }
 
                 Repeater {
@@ -221,102 +151,60 @@ Item {
                                   ? "#11FFFFFF"
                                   : "transparent")
 
-
-                        // =============================================
                         // VẠCH PHÂN CÁCH
-                        // =============================================
-
                         Rectangle {
                             width: 1
                             height: parent.height * 0.5
-
                             color: "#22FFFFFF"
-
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-
                             visible: index < iconModel.count - 1
                         }
 
-
-                        // =============================================
                         // ICON
-                        // =============================================
-
                         Item {
                             id: iconContainer
-
                             anchors.centerIn: parent
-
                             width: 44
                             height: 44
-
 
                             // Glow nhẹ phía sau
                             Image {
                                 anchors.centerIn: parent
-
                                 width: 40
                                 height: 40
-
                                 source: model.iconPath
-
                                 fillMode: Image.PreserveAspectFit
-
-                                smooth: true
-                                mipmap: false
-
                                 opacity: 0.18
-
                                 scale: 1.08
                             }
-
 
                             // Icon chính
                             Image {
                                 id: menuIcon
-
                                 anchors.centerIn: parent
-
                                 width: 38
                                 height: 38
-
                                 source: model.iconPath
-
                                 fillMode: Image.PreserveAspectFit
-
-                                smooth: true
-                                mipmap: false
-
-                                opacity: 1.0
-
-                                asynchronous: false
                             }
                         }
 
-
-                        // =============================================
-                        // MOUSE
-                        // =============================================
-
+                        // MOUSE EVENT
                         MouseArea {
                             id: btnMouse
-
                             anchors.fill: parent
-
                             hoverEnabled: true
-
                             onClicked: {
                                 console.log("Selected option:", model.iconName)
                             }
                         }
                     }
                 }
-    }        }
+            }
+        }
     }
 
-
->>>>>>> e10429312576b156a936d2b9dcadbc53e3641380
     CaptureSession {
         camera: Camera {
             id: camera

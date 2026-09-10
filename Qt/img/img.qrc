@@ -1,23 +1,21 @@
 <RCC>
     <qresource prefix="/">
-        <file>porsche1.png</file>
+        <file>porche.png</file>
         <file>carRED.png</file>
-        <file>0468e38a-fdaa-4e69-990a-c3627833e7f8.png</file>
         <file>dashboard_bg.png</file>
-<<<<<<< HEAD
         <file>TpmsCar.png</file>
         <file>tpms.png</file>
-=======
         <file>sensor360.png</file>
-        <file>Gemini_Generated_Image_zd75fvzd75fvzd75.png</file>
         <file>back.png</file>
-        <file>backsensor.png</file>
-        <file>frontsensor.png</file>
+        <file>RearView.png</file>
+        <file>FrontView.png</file>
         <file>LeftView.png</file>
         <file>SurroundView.png</file>
-        <file>Gemini_Generated_Image_w3m46yw3m46yw3m4-Picsart-BackgroundRemover.png</file>
-        <file>Gemini_Generated_Image_car5zocar5zocar5-Picsart-BackgroundRemover.png</file>
-        <file>tpms-cr.png</file>
->>>>>>> e10429312576b156a936d2b9dcadbc53e3641380
+        <file>RightView.png</file>
+        <file>CarRecording.png</file>
+        <file>CarSettings.png</file>
+        <file>img.qrc</file>
+        <file>img_car_tpms.png</file>
+        <file>NightView.png</file>
     </qresource>
 </RCC>
