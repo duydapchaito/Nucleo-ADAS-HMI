@@ -54,6 +54,7 @@ qt_add_qml_module(appParking_Sensor
         QML_FILES SonarWave.qml
         RESOURCES HMI_Architecture.md
         RESOURCES README.md
+        QML_FILES
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

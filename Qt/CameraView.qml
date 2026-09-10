@@ -112,6 +112,7 @@ Item {
                 z: 4
             }
         }
+<<<<<<< HEAD
 
         // ==========================================
         // 2. KHUNG PANEL DÀN ĐỀU ICON (PHÍA DƯỚI)
@@ -179,6 +180,143 @@ Item {
         }
     }
 
+=======
+
+        // ==========================================
+        // 2. KHUNG PANEL DÀN ĐỀU ICON (PHÍA DƯỚI)
+        // ==========================================
+        Rectangle {
+            id: bottomPanel
+            Layout.fillWidth: true
+            Layout.preferredHeight: 75 // Độ cao cố định của khung panel dưới
+            color: "#0D0E12"           // Màu nền tối tách biệt hoàn toàn
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: 0
+
+                ListModel {
+                    id: iconModel
+                    ListElement { iconName: "back"; iconPath: "qrc:/back.png" }
+                    ListElement { iconName: "mode2d"; iconPath: "qrc:/SurroundView.png" }
+                    ListElement { iconName: "radar"; iconPath: "qrc:/frontsensor.png" }
+                    ListElement { iconName: "tow"; iconPath: "qrc:/backsensor.png" }
+                    ListElement { iconName: "cam_side_left"; iconPath: "qrc:/LeftView.png" }
+                    ListElement { iconName: "cam_side_right"; iconPath: "qrc:/Gemini_Generated_Image_zd75fvzd75fvzd75.png" }
+                    ListElement { iconName: "cam_360"; iconPath: "qrc:/sensor360.png" }
+                    ListElement { iconName: "settings"; iconPath: "qrc:/Gemini_Generated_Image_car5zocar5zocar5-Picsart-BackgroundRemover.png" }
+                    ListElement { iconName: "recording"; iconPath: "qrc:/Gemini_Generated_Image_w3m46yw3m46yw3m4-Picsart-BackgroundRemover.png" }
+                }
+
+                Repeater {
+                    model: iconModel
+
+                    delegate: Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        color: btnMouse.containsPress
+                               ? "#33FFFFFF"
+                               : (btnMouse.containsMouse
+                                  ? "#11FFFFFF"
+                                  : "transparent")
+
+
+                        // =============================================
+                        // VẠCH PHÂN CÁCH
+                        // =============================================
+
+                        Rectangle {
+                            width: 1
+                            height: parent.height * 0.5
+
+                            color: "#22FFFFFF"
+
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            visible: index < iconModel.count - 1
+                        }
+
+
+                        // =============================================
+                        // ICON
+                        // =============================================
+
+                        Item {
+                            id: iconContainer
+
+                            anchors.centerIn: parent
+
+                            width: 44
+                            height: 44
+
+
+                            // Glow nhẹ phía sau
+                            Image {
+                                anchors.centerIn: parent
+
+                                width: 40
+                                height: 40
+
+                                source: model.iconPath
+
+                                fillMode: Image.PreserveAspectFit
+
+                                smooth: true
+                                mipmap: false
+
+                                opacity: 0.18
+
+                                scale: 1.08
+                            }
+
+
+                            // Icon chính
+                            Image {
+                                id: menuIcon
+
+                                anchors.centerIn: parent
+
+                                width: 38
+                                height: 38
+
+                                source: model.iconPath
+
+                                fillMode: Image.PreserveAspectFit
+
+                                smooth: true
+                                mipmap: false
+
+                                opacity: 1.0
+
+                                asynchronous: false
+                            }
+                        }
+
+
+                        // =============================================
+                        // MOUSE
+                        // =============================================
+
+                        MouseArea {
+                            id: btnMouse
+
+                            anchors.fill: parent
+
+                            hoverEnabled: true
+
+                            onClicked: {
+                                console.log("Selected option:", model.iconName)
+                            }
+                        }
+                    }
+                }
+    }        }
+    }
+
+
+>>>>>>> e10429312576b156a936d2b9dcadbc53e3641380
     CaptureSession {
         camera: Camera {
             id: camera
