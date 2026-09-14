@@ -59,7 +59,7 @@ Rectangle {
             // Kích thước xe
             width: Math.min(parent.width * 0.30, 200)
             height: parent.height * 0.90
-            source: "qrc:/TpmsCar.png"
+            source: "qrc:/tpms.png"
 
             fillMode: Image.PreserveAspectFit
             smooth: true
