@@ -1,3 +1,8 @@
+/**
+ * @file Mcal_Dio.c
+ * @brief MCAL DIO Driver - Trừu tượng hóa việc đọc/ghi chân GPIO kỹ thuật số.
+ */
+
 #include "main.h"
 #include "Mcal_Dio.h"
 
@@ -16,6 +21,9 @@ static const Dio_PinMapping_t Dio_PinMapping[DIO_CHAN_MAX] =
     {USS_RR_TRIG_GPIO_Port, USS_RR_TRIG_Pin}    // DIO_CHAN_TRIG_RR
 };
 
+/**
+ * @brief Ghi mức điện áp (HIGH/LOW) lên một kênh DIO bất kỳ.
+ */
 void Mcal_Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level) 
 {
     if (ChannelId < DIO_CHAN_MAX) {
@@ -24,6 +32,9 @@ void Mcal_Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
     }
 }
 
+/**
+ * @brief Đọc trạng thái mức điện áp từ một kênh DIO.
+ */
 Dio_LevelType Mcal_Dio_ReadChannel(Dio_ChannelType ChannelId)
 {
     // 1. Chặn lỗi (Boundary Check)

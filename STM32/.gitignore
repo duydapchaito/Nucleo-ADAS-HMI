@@ -46,7 +46,7 @@
 **/*.jdebug
 
 # Local configuration files (should not be committed)
-.clangd
+compile_flags.txt
 
 # =========================
 # Keep essential STM32 project files tracked

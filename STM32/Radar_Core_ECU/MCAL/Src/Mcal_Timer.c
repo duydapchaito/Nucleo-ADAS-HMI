@@ -1,3 +1,8 @@
+/**
+ * @file Mcal_Timer.c
+ * @brief MCAL Timer Driver - Quản lý Input Capture cho siêu âm, Encoder cho cần số và hàm tạo trễ us.
+ */
+ 
 #include "main.h"
 #include "Mcal_Timer.h"
 #include "tim.h"
@@ -6,126 +11,93 @@
 // Extern các biến Timer từ tim.c
 extern TIM_HandleTypeDef htim1; // Capture
 extern TIM_HandleTypeDef htim2; // Encoder
-extern TIM_HandleTypeDef htim6; // Heartbeat 25ms
-extern TIM_HandleTypeDef htim7; // Delay us
 
-extern volatile uint8_t g_Task_25ms_Flag; // Khai báo kéo cờ từ main.c sang
-
+/**
+ * @brief Khởi tạo các bộ định thời cơ sở, Encoder và bật ngắt Input Capture cho 4 cảm biến.
+ */
 void Mcal_Timer_Init(void) 
 {
-    HAL_TIM_Base_Start(&htim7);             // Bật TIM7 cho Polling Delay
-    HAL_TIM_Base_Start_IT(&htim6);          // Bật TIM6 cho Heartbeat 25ms
+    /* Khởi động bộ đếm nền 1MHz của TIM1 và Encoder TIM2 */
+    HAL_TIM_Base_Start(&htim1);
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL); // Bật TIM2 cho Encoder
 
-    Mcal_Timer_StartCaptureChannel(0);
-    Mcal_Timer_StartCaptureChannel(1);
-    Mcal_Timer_StartCaptureChannel(2);
-    Mcal_Timer_StartCaptureChannel(3);
-}
-
-void Mcal_Timer_DelayUs(uint16_t us) 
-{
-    __HAL_TIM_SET_COUNTER(&htim7, 0); // Reset counter
-    while (__HAL_TIM_GET_COUNTER(&htim7) < us);
-}
-
-void Mcal_Timer_DelayMs(uint16_t ms) 
-{
-    while (ms--) {
-        Mcal_Timer_DelayUs(1000); // Delay 1ms
+    /* Bật ngắt Input Capture cho cả 4 cảm biến FL, FR, RL, RR */
+    for (uint8_t ch = 0; ch < 4U; ch++) 
+    {
+        Mcal_Timer_StartCaptureChannel(ch);
     }
 }
 
+/**
+ * @brief Tạo khoảng trễ chính xác theo đơn vị micro-giây (Dùng cho việc kích xung Trigger 10us).
+ */
+void Mcal_Timer_DelayUs(uint16_t us) 
+{
+    uint16_t start = (uint16_t)__HAL_TIM_GET_COUNTER(&htim1);
+    while ((uint16_t)((uint16_t)__HAL_TIM_GET_COUNTER(&htim1) - start) < us)
+    {
+        __NOP();
+    }
+}
+
+/**
+ * @brief Đọc giá trị xung đếm hiện tại từ Encoder (cần số).
+ */
 uint32_t Mcal_Timer_GetEncoderCount(void) 
 {
     return __HAL_TIM_GET_COUNTER(&htim2);
 }
 
-// Hàm bắt Input Capture theo Channel
+/**
+ * @brief Bật ngắt Input Capture theo từng kênh định sẵn.
+ */
 void Mcal_Timer_StartCaptureChannel(uint8_t Channel)
 {
-    uint32_t tim_channel;
-    switch (Channel) {
-        case 0:
-            tim_channel = TIM_CHANNEL_1;
-            break;
-        case 1:
-            tim_channel = TIM_CHANNEL_2;
-            break;
-        case 2:
-            tim_channel = TIM_CHANNEL_3;
-            break;
-        case 3:
-            tim_channel = TIM_CHANNEL_4;
-            break;
-        default:
-            return;
+    static const uint32_t channel_map[4] = {
+        TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4
+    };
+    if (Channel < 4U) {
+        HAL_TIM_IC_Start_IT(&htim1, channel_map[Channel]);
     }
-    HAL_TIM_IC_Start_IT(&htim1, tim_channel);
 }
 
-// Hàm ngừng Input Capture theo Channel
+/**
+ * @brief Tắt ngắt Input Capture theo kênh.
+ */
 void Mcal_Timer_StopCaptureChannel(uint8_t Channel)
 {
-    uint32_t tim_channel;
-    switch (Channel) {
-        case 0:
-            tim_channel = TIM_CHANNEL_1;
-            break;
-        case 1:
-            tim_channel = TIM_CHANNEL_2;
-            break;
-        case 2:
-            tim_channel = TIM_CHANNEL_3;
-            break;
-        case 3:
-            tim_channel = TIM_CHANNEL_4;
-            break;
-        default:
-            return;
+    static const uint32_t channel_map[4] = {
+        TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4
+    };
+    if (Channel < 4U) {
+        HAL_TIM_IC_Stop_IT(&htim1, channel_map[Channel]);
     }
-    HAL_TIM_IC_Stop_IT(&htim1, tim_channel);
 } 
 
-// Hàm hỗ trợ đổi sườn xung cho ngắt IC
+/**
+ * @brief Cấu hình sườn xung bắt tín hiệu (Cạnh lên / Cạnh xuống) cho Input Capture.
+ */
 void Mcal_Timer_SetCapturePolarity(uint8_t Channel, uint8_t isRisingEdge) 
 {
-    uint32_t polarity = isRisingEdge ? TIM_INPUTCHANNELPOLARITY_RISING : TIM_INPUTCHANNELPOLARITY_FALLING;
-    uint32_t tim_channel;
+    static const uint32_t channel_map[4] = {
+        TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4
+    };
+    if (Channel < 4U) {
+        uint32_t pol = isRisingEdge ? TIM_INPUTCHANNELPOLARITY_RISING
+                                        : TIM_INPUTCHANNELPOLARITY_FALLING;
 
-    // Map từ số Kênh (0-3) sang Macro của HAL
-    switch (Channel) {
-        case 0:
-            tim_channel = TIM_CHANNEL_1;
-            break;
-        case 1:
-            tim_channel = TIM_CHANNEL_2;
-            break;
-        case 2:
-            tim_channel = TIM_CHANNEL_3;
-            break;
-        case 3:
-            tim_channel = TIM_CHANNEL_4;
-            break;
-        default:
-            return; // Kênh không hợp lệ
-    }
-    __HAL_TIM_SET_CAPTUREPOLARITY(&htim1, tim_channel, polarity);
-}
-
-// =========================================================================
-// 1. NGẮT THỜI GIAN THỰC (OS HEARTBEAT - 25ms)
-// =========================================================================
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM6) {
-        g_Task_25ms_Flag = 1;
+        // Đảm bảo vô hiệu hóa ngắt tạm thời và xóa cờ sướng xung để tránh kẹt băng thông phần cứng
+        __HAL_TIM_DISABLE_IT(&htim1, (TIM_IT_CC1 << Channel));
+        TIM_RESET_CAPTUREPOLARITY(&htim1, channel_map[Channel]);
+        TIM_SET_CAPTUREPOLARITY(&htim1, channel_map[Channel], pol);
+        __HAL_TIM_CLEAR_FLAG(&htim1, (TIM_FLAG_CC1 << Channel) | (TIM_FLAG_CC1OF << Channel));
+        __HAL_TIM_ENABLE_IT(&htim1, (TIM_IT_CC1 << Channel));
     }
 }
 
-// =========================================================================
-// 2. NGẮT INPUT CAPTURE (NẰM GỌN TRONG MCAL)
-// =========================================================================
+/**
+ * @brief Trạm trung chuyển ngắt TIM1: Lọc giá trị captured từ các kênh và chuyển về Eal_RadarHw.
+ */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM1) {
@@ -135,19 +107,19 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
         switch (htim->Channel) {
             case HAL_TIM_ACTIVE_CHANNEL_1:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-                sensor_id = 0; // FL
+                sensor_id = 0; /* FL */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_2:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-                sensor_id = 1; // FR
+                sensor_id = 1; /* FR */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_3:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
-                sensor_id = 2; // RL
+                sensor_id = 2; /* RL */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_4:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
-                sensor_id = 3; // RR
+                sensor_id = 3; /* RR */
                 break;
             default:
                 break;

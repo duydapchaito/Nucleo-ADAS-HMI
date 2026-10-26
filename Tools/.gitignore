@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C environments & virtualenvs
+.venv/
+venv/
+ENV/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs & temp files
+*.log
+*.tmp
+
+# VS Code / PyCharm local settings (nếu mở riêng thư mục Tools)
+.vscode/
+.idea/

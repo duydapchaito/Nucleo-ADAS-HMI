@@ -3,42 +3,31 @@
 Dự án áp dụng tư duy phân tầng lấy cảm hứng từ AUTOSAR (Lite-AUTOSAR), hướng tới mục tiêu **Zero-HAL** tại tầng ứng dụng. Toàn bộ mã nguồn được quy hoạch thành các module độc lập:
 
 ```
-Project_Root/
-├── Core/                      (Code do CubeMX sinh ra, chứa main.c "rỗng" để gọi Boot)
+Radar_Core_ECU/
+├── MCAL/
+│   ├── Mcal_Dio.h / .c          [GIỮ NGUYÊN] - Đọc/ghi chân GPIO (Trigger, Buzzer)
+│   ├── Mcal_Uart.h / .c         [GIỮ NGUYÊN] - Truyền UART2 DMA
+│   ├── Mcal_Pwr.h / .c          [CẬP NHẬT]   - Đổi cờ sang PWR_SLEEPENTRY_WFI
+│   ├── Mcal_Timer.h / .c        [CẬP NHẬT]   - TIM1 (Capture + DelayUs), TIM2 (Encoder)
+│   └── Mcal_Can.h / .c          [FILE MỚI]   - CAN1 Driver (Filter, TX Mailbox, RX FIFO0 ISR)
 │
-├── MCAL/                      (Microcontroller Abstraction Layer)
-│   ├── Inc/ 
-│   │   ├── Mcal_Timer.h       (Bọc cấu hình đếm xung, Delay)
-│   │   ├── Mcal_Dio.h         (Bọc GPIO)
-│   │   └── Mcal_Uart.h        (Bọc phần truyền nhận vật lý)
-│   └── Src/ ...
+├── EAL/
+│   ├── Eal_RadarHw.h / .c       [GIỮ NGUYÊN] - Bắn Trigger & tính độ rộng xung 4 mắt thật
+│   ├── Eal_Encoder.h / .c       [GIỮ NGUYÊN] - Tính độ lệch xung xoay cần số
+│   ├── Eal_Buzzer.h / .c        [GIỮ NGUYÊN] - Điều khiển còi cảnh báo
+│   └── Eal_CanIf.h / .c         [FILE MỚI]   - Ánh xạ PDU ID <-> CAN ID (0x300, 0x7E8)
 │
-├── ECUAL/                     (ECU Abstraction Layer - IoHwAb)
-│   ├── Inc/
-│   │   ├── Eal_Buzzer.h     (Định nghĩa còi kêu/tắt dựa trên Mcal_Dio)
-│   │   ├── Eal_RadarHw.h    (Quản lý phát xung Trigger và nhận ngắt Echo)
-│   │   └── Eal_Encoder.h    (Quản lý đọc Delta đếm xung vật lý)
-│   └── Src/ ...
+├── CDD_MathLibs/
+│   ├── Cdd_Filter.h / .c        [CẬP NHẬT]   - Đổi Ticks -> cm, lọc nhiễu EMA & bắt lỗi đứt dây 4 mắt thật
+│   └── Cdd_Fusion.h / .c        [CẬP NHẬT]   - Hợp thể 4 mắt thật -> 6 mắt đồng đẳng + đóng gói 6-bit ErrorMask
 │
-├── Services/                  (Basic Software - Tầng Dịch vụ Hệ thống)
-│   ├── Inc/
-│   │   └── Com_Uart_If.h      (Giao tiếp UART mức logic - Dọn đường cho CanIf/UDS)
-│   └── Src/ ...
+├── Services/
+│   ├── Os.h / .c                [FILE MỚI]   - Quản lý FreeRTOS Tasks, Mutex, Queue, WFI, điều phối EAL->CDD->RTE
+│   └── Com_Manager.h / .c       [ĐỔI TÊN]    - (Từ Com_Uart_If) Đóng gói CAN 8-Byte (0x300) & UART NMEA
 │
-├── CDD_MathLibs/              (Complex Device Drivers / Pure Math - Tầng tính toán)
-│   ├── Inc/
-│   │   ├── Lib_Filter.h       (Thuật toán Kalman, EMA - C thuần 100%, độc lập phần cứng)
-│   │   └── Lib_Fusion.h       (Toán học nội suy góc chéo)
-│   └── Src/ ...
+├── RTE/
+│   └── Rte_Radar.h / .c         [CẬP NHẬT]   - Trạm trung chuyển Thread-Safe (Biết 4 HW Ticks & 6 Sensor Distances)
 │
-├── RTE/                       (Runtime Environment - Môi trường Môi giới)
-│   ├── Inc/
-│   │   └── Rte_Radar.h        (Chứa Shadow Buffers, Cờ đồng bộ 2 pha quét, trạng thái toàn cục)
-│   └── Src/ ...
-│
-└── AppL/                      (Application Layer - Khối nghiệp vụ cốt lõi)
-    ├── Inc/
-    │   ├── Swc_AdasWarning.h  (Software Component: Rút data từ RTE, tính toán ngữ cảnh, kích hoạt Buzzer)
-    │   └── Swc_HmiRouter.h    (Software Component: Rút data từ RTE, ép chuỗi, đẩy xuống BSW_Com)
-    └── Src/ ...
+└── AppL/
+    └── Swc_Radar.h / .c         [CẬP NHẬT]   - (Boss cuối) Đọc mảng 6 cảm biến đồng đẳng, chẩn đoán Gear, Buzzer, gọi Com
 ```

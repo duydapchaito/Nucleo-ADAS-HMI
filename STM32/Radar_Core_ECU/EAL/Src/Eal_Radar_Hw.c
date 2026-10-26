@@ -1,18 +1,25 @@
+/**
+ * @file Eal_Radar_Hw.c
+ * @brief EAL Radar Hardware - Quản lý việc kích hoạt xung Trigger và tính toán thời gian Echo thô (Ticks) cho 4 mắt siêu âm.
+ */
+
 #include "Eal_RadarHw.h"
 #include "Mcal_Timer.h"
 #include "Mcal_Dio.h"
 #include <stdint.h>
 
-// Có 4 cảm biến (FL, FR, RL, RR) map với 4 Timer Channel
-// Ở đây làm khung mảng lưu trữ cho ngắt
 #define MAX_RADAR_SENSORS 4
 static Eal_SensorRaw_t Radar_HwData[MAX_RADAR_SENSORS];
 
+// Bảng ánh xạ chân Trigger phần cứng cho 4 mắt siêu âm (FL, FR, RL, RR)
 static const Dio_ChannelType Trig_Pins[MAX_RADAR_SENSORS] = {
     DIO_CHAN_TRIG_FL, DIO_CHAN_TRIG_FR, DIO_CHAN_TRIG_RL, DIO_CHAN_TRIG_RR
 };
 
-// Hàm bắn Trigger tuần tự 10us
+/**
+ * @brief Kích hoạt xung Trigger dài 10us để phát sóng siêu âm cho một cảm biến cụ thể.
+ * @param SensorId Chỉ số mắt cảm biến (0 đến 3).
+ */
 void Eal_Radar_Trigger(uint8_t SensorId)
 {
     if (SensorId >= MAX_RADAR_SENSORS) return;
@@ -26,7 +33,9 @@ void Eal_Radar_Trigger(uint8_t SensorId)
     Mcal_Dio_WriteChannel(pin, DIO_LEVEL_LOW);
 }
 
-// Hàm này sẽ được gọi bên trong callback ngắt Input Capture của MCAL/main
+/**
+ * @brief Xử lý ngắt Input Capture: Đo khoảng thời gian giữa sườn lên và sườn xuống của xung Echo.
+ */
 void Eal_Radar_ProcessCapture(uint8_t SensorId, uint32_t CapturedValue)
 {
     if (SensorId >= MAX_RADAR_SENSORS) return;
@@ -50,8 +59,9 @@ void Eal_Radar_ProcessCapture(uint8_t SensorId, uint32_t CapturedValue)
     }
 }
 
-
-// API Getter cho RTE rút data thô
+/**
+ * @brief Lấy giá trị ticks thô của cảm biến phục vụ cho tầng RTE/CDD.
+ */
 uint32_t Eal_Radar_GetRawTicks(uint8_t SensorIndex)
 {
     if (SensorIndex < MAX_RADAR_SENSORS) {
