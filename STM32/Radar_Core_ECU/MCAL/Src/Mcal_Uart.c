@@ -1,13 +1,20 @@
 /**
  * @file Mcal_Uart.c
- * @brief MCAL UART Driver - Giao tiếp truyền nhận dữ liệu tốc độ cao qua DMA.
+ * @brief MCAL UART Driver - Giao tiếp truyền nhận dữ liệu qua DMA hoàn toàn độc lập với tầng OS.
  */
  
 #include "usart.h"
 #include "Mcal_Uart.h"
-#include "Os.h"
+#include <stddef.h>
 
 extern UART_HandleTypeDef huart2;
+
+static Mcal_Uart_TxCpltCbType s_UartTxCpltCb = NULL;
+
+void Mcal_Uart_RegisterTxCpltCallback(Mcal_Uart_TxCpltCbType cb)
+{
+    s_UartTxCpltCb = cb;
+}
 
 /**
  * @brief Truyền một chuỗi byte qua UART sử dụng phần cứng DMA.
@@ -17,6 +24,10 @@ extern UART_HandleTypeDef huart2;
  */
 Mcal_Uart_StatusType Mcal_Uart_Transmit(const uint8_t* pData, uint16_t Length)
 {
+    if ((pData == NULL) || (Length == 0U)) {
+        return MCAL_UART_ERROR;
+    }
+
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart2, (uint8_t*)pData, Length);
 
     if (status == HAL_OK) {
@@ -24,7 +35,20 @@ Mcal_Uart_StatusType Mcal_Uart_Transmit(const uint8_t* pData, uint16_t Length)
     } else if (status == HAL_BUSY) {
         return MCAL_UART_BUSY;
     }
+
     return MCAL_UART_ERROR;
+}
+
+void Mcal_Uart_TransmitPolling(const char *pStr)
+{
+    if (pStr == NULL) {
+        return;
+    }
+    while (*pStr != '\0') 
+    {
+        while ((USART2->SR & USART_SR_TXE) == 0U) {}
+        USART2->DR = (uint8_t)(*pStr++);
+    }
 }
 
 /**
@@ -33,6 +57,8 @@ Mcal_Uart_StatusType Mcal_Uart_Transmit(const uint8_t* pData, uint16_t Length)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART2) {
-        Os_Uart_TxCpltFromISR();
+        if (s_UartTxCpltCb != NULL) {
+            s_UartTxCpltCb();
+        }
     }
 }

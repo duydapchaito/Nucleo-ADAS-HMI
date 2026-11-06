@@ -7,12 +7,13 @@
 #define COM_MANAGER_H
 
 #include <stdint.h>
+#include "Eal_CanIf.h"
 
 /** @brief Trạng thái truyền thông điệp của Com Manager */
 typedef enum {
-    COM_TX_OK = 0,      /**< Truyền thông điệp thành công */
-    COM_TX_BUSY,        /**< Đường truyền bận */
-    COM_TX_ERROR        /**< Lỗi truyền dữ liệu */
+    COM_TX_OK       = 0U,   /**< Truyền thông điệp thành công */
+    COM_TX_BUSY     = 1U,   /**< Đường truyền bận */
+    COM_TX_ERROR    = 2U    /**< Lỗi truyền dữ liệu */
 } Com_StatusType;
 
 /**
@@ -27,5 +28,8 @@ Com_StatusType Com_Manager_SendRadarCan(uint8_t GearState, const uint16_t Dist6[
  * @brief Gửi chuỗi log NMEA qua đường UART2 sử dụng DMA.
  */
 Com_StatusType Com_Manager_SendRadarNmea(char GearChar, const uint16_t Dist6[6]);
+
+/* Callback từ Eal_CanIf khi nhận được gói tin COM động lực học xe (ID 0x200) */
+void Com_Manager_RxIndication(CanIf_RxPduIdType RxPduId, const CanIf_PduInfoType *PduInfoPtr);
 
 #endif /* COM_MANAGER_H */

@@ -1,8 +1,6 @@
 /**
  * @file    Mcal_I2c.h
- * @brief   Lớp trừu tượng phần cứng (MCAL) cho giao tiếp I2C.
- * @note    Bọc các hàm HAL I2C để phục vụ việc đọc/ghi các thiết bị ngoại vi 
- *          dạng bộ nhớ (như EEPROM AT24C02). Hoàn toàn độc lập với RTOS.
+ * @brief   Lớp trừu tượng phần cứng (MCAL) cho giao tiếp I2C, độc lập với RTOS qua Callback đồng bộ.
  */
 
 #ifndef MCAL_I2C_H
@@ -18,6 +16,18 @@ typedef enum {
     MCAL_I2C_BUSY       = 0x02U,
     MCAL_I2C_TIMEOUT    = 0x03U
 } Mcal_I2c_StatusType;
+
+/** @brief Bộ giao diện hàm đồng bộ OS tiêm (inject) xuống MCAL I2C lúc khởi tạo */
+typedef struct {
+    void (*ClearSync)(void);
+    bool (*WaitSync)(uint32_t timeoutMs);
+    void (*SignalFromIsr)(void);
+} Mcal_I2c_SyncCallbacksType;
+
+/**
+ * @brief Đăng ký các hàm đồng bộ từ OS để MCAL I2C không phụ thuộc trực tiếp vào Os.h.
+ */
+void Mcal_I2c_RegisterSyncCallbacks(const Mcal_I2c_SyncCallbacksType *pCallbacks);
 
 /**
  * @brief  Ghi một mảng dữ liệu vào bộ nhớ I2C (EEPROM).

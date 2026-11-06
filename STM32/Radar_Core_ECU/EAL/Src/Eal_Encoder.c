@@ -6,7 +6,7 @@
 #include "Eal_Encoder.h"
 #include "Mcal_Timer.h"
 
-static uint32_t Last_Count = 0;
+static uint32_t Last_Count = 0U;
 static int32_t Accumulated_Delta = 0;
 
 /**

@@ -6,11 +6,13 @@
 #include "main.h"
 #include "Mcal_Timer.h"
 #include "tim.h"
-#include "Eal_RadarHw.h"
+#include <stddef.h>
 
 // Extern các biến Timer từ tim.c
 extern TIM_HandleTypeDef htim1; // Capture
 extern TIM_HandleTypeDef htim2; // Encoder
+
+static Mcal_Timer_IcCaptureCbType s_IcCaptureCb = NULL;
 
 /**
  * @brief Khởi tạo các bộ định thời cơ sở, Encoder và bật ngắt Input Capture cho 4 cảm biến.
@@ -22,10 +24,15 @@ void Mcal_Timer_Init(void)
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL); // Bật TIM2 cho Encoder
 
     /* Bật ngắt Input Capture cho cả 4 cảm biến FL, FR, RL, RR */
-    for (uint8_t ch = 0; ch < 4U; ch++) 
+    for (uint8_t ch = 0U; ch < 4U; ch++) 
     {
         Mcal_Timer_StartCaptureChannel(ch);
     }
+}
+
+void Mcal_Timer_RegisterCaptureCallback(Mcal_Timer_IcCaptureCbType cb)
+{
+    s_IcCaptureCb = cb;
 }
 
 /**
@@ -86,7 +93,7 @@ void Mcal_Timer_SetCapturePolarity(uint8_t Channel, uint8_t isRisingEdge)
         uint32_t pol = isRisingEdge ? TIM_INPUTCHANNELPOLARITY_RISING
                                         : TIM_INPUTCHANNELPOLARITY_FALLING;
 
-        // Đảm bảo vô hiệu hóa ngắt tạm thời và xóa cờ sướng xung để tránh kẹt băng thông phần cứng
+        // Đảm bảo vô hiệu hóa ngắt tạm thời và xóa cờ sườn xung để tránh kẹt băng thông phần cứng
         __HAL_TIM_DISABLE_IT(&htim1, (TIM_IT_CC1 << Channel));
         TIM_RESET_CAPTUREPOLARITY(&htim1, channel_map[Channel]);
         TIM_SET_CAPTUREPOLARITY(&htim1, channel_map[Channel], pol);
@@ -101,32 +108,32 @@ void Mcal_Timer_SetCapturePolarity(uint8_t Channel, uint8_t isRisingEdge)
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM1) {
-        uint32_t capture_val = 0;
-        uint8_t sensor_id = 0xFF;
+        uint32_t capture_val = 0U;
+        uint8_t sensor_id = 0xFFU;
         
         switch (htim->Channel) {
             case HAL_TIM_ACTIVE_CHANNEL_1:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-                sensor_id = 0; /* FL */
+                sensor_id = 0U; /* FL */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_2:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-                sensor_id = 1; /* FR */
+                sensor_id = 1U; /* FR */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_3:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
-                sensor_id = 2; /* RL */
+                sensor_id = 2U; /* RL */
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_4:
                 capture_val = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
-                sensor_id = 3; /* RR */
+                sensor_id = 3U; /* RR */
                 break;
             default:
                 break;
         }
 
-        if (sensor_id != 0xFF) {
-            Eal_Radar_ProcessCapture(sensor_id, capture_val);
+        if ((sensor_id != 0xFFU) && (s_IcCaptureCb != NULL)) {
+            s_IcCaptureCb(sensor_id, capture_val);
         }
     }
 }

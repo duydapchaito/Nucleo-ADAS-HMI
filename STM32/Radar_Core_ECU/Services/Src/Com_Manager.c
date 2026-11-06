@@ -4,8 +4,7 @@
  */
 
 #include "Com_Manager.h"
-#include "Eal_CanIf.h"
-#include "Os.h"
+#include "Log.h"
 #include <stdio.h>
 
 /**
@@ -28,7 +27,7 @@ Com_StatusType Com_Manager_SendRadarCan(uint8_t GearState, const uint16_t Dist6[
 
     uint8_t payload[8];
     payload[0] = GearState;
-    for (uint8_t i = 0; i < 6U; i++)
+    for (uint8_t i = 0U; i < 6U; i++)
     {
         payload[i + 1U] = Com_ScaleDistHalf(Dist6[i]);  // Bytes 1-6: 6 cảm biến radar
     }
@@ -57,9 +56,17 @@ Com_StatusType Com_Manager_SendRadarNmea(char GearChar, const uint16_t Dist6[6])
                         GearChar,
                         (unsigned int)Dist6[0], (unsigned int)Dist6[1], (unsigned int)Dist6[2],
                         (unsigned int)Dist6[3], (unsigned int)Dist6[4], (unsigned int)Dist6[5]);
-    if (len > 0) {
-        Os_Uart_PushRawString(txBuffer, len);
+    if ((len > 0) && (len < (int)sizeof(txBuffer))) {
+        Log_PushRawString(txBuffer, (uint16_t)len);
         return COM_TX_OK;
     }
     return COM_TX_ERROR;
+}
+
+void Com_Manager_RxIndication(CanIf_RxPduIdType RxPduId, const CanIf_PduInfoType *PduInfoPtr)
+{
+    (void)RxPduId;
+    if ((PduInfoPtr == NULL) || (PduInfoPtr->SduDataPtr == NULL) || (PduInfoPtr->SduLength < 4U)) {
+        return;
+    }
 }

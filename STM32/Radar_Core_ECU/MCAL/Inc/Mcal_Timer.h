@@ -8,10 +8,15 @@
 
 #include <stdint.h>
 
+/** @brief Kiểu con trỏ hàm Callback khi bắt được sườn xung Input Capture */
+typedef void (*Mcal_Timer_IcCaptureCbType)(uint8_t Channel, uint32_t CapturedValue);
+
 /**
  * @brief Khởi tạo các bộ định thời (TIM1 cho siêu âm, TIM2 cho Encoder).
  */
 void Mcal_Timer_Init(void);
+
+void Mcal_Timer_RegisterCaptureCallback(Mcal_Timer_IcCaptureCbType cb);
 
 /**
  * @brief Tạo khoảng trễ chính xác theo đơn vị micro-giây.

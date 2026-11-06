@@ -5,93 +5,42 @@ import time
 import serial
 import serial.tools.list_ports
 import can
+import threading # QUAN TRỌNG: Cần cho timer clear
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QGroupBox, QLabel, QComboBox,
                              QPushButton, QTextEdit, QSplitter, QFrame)
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QTextCursor, QTextOption
 
-# --- CẤU HÌNH ĐÍCH UDP CHO QT DASHBOARD ---
+# --- CẤU HÌNH ĐÍCH UDP CHO QT DASHBOARD (COM) ---
 QT_IP = "127.0.0.1"
 QT_PORT = 5005
 
+# --- CẤU HÌNH ĐÍCH UDP CHO UDS TESTER (TP) ---
+TESTER_IP = "127.0.0.1"
+TESTER_PORT = 5006
+
+# --- CẤU HÌNH GATEWAY LẮNG NGHE LỆNH UDS TỪ TESTER ---
+GATEWAY_RECV_IP = "127.0.0.1"
+GATEWAY_RECV_PORT = 5007
+
 # --- DARK THEME STYLESHEET ---
 DARK_STYLESHEET = """
-QMainWindow, QWidget {
-    background-color: #18181B;
-    color: #E4E4E7;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 12px;
-}
-QFrame#TopBar {
-    background-color: #1E1E24;
-    border: 1px solid #27272A;
-    border-radius: 6px;
-}
-QGroupBox {
-    border: 1px solid #27272A;
-    border-radius: 6px;
-    margin-top: 8px;
-    padding-top: 12px;
-    padding-bottom: 6px;
-    padding-left: 8px;
-    padding-right: 8px;
-    background-color: #1E1E24;
-    font-weight: bold;
-    color: #A1A1AA;
-}
-QGroupBox::title {
-    subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 5px;
-}
-QComboBox {
-    background-color: #27272A;
-    border: 1px solid #3F3F46;
-    border-radius: 4px;
-    padding: 3px 8px;
-    color: #F4F4F5;
-}
-QComboBox:disabled {
-    background-color: #18181B;
-    color: #52525B;
-    border-color: #27272A;
-}
-QComboBox::drop-down {
-    border: none;
-}
-QPushButton {
-    background-color: #27272A;
-    border: 1px solid #3F3F46;
-    border-radius: 4px;
-    padding: 4px 12px;
-    color: #F4F4F5;
-    font-weight: 600;
-}
-QPushButton:hover {
-    background-color: #3F3F46;
-    border-color: #52525B;
-}
-QPushButton:pressed {
-    background-color: #18181B;
-}
-QPushButton#ScanBtn {
-    background-color: #2563EB;
-    border: 1px solid #3B82F6;
-    color: #FFFFFF;
-}
-QPushButton#ScanBtn:hover {
-    background-color: #1D4ED8;
-}
-QSplitter::handle {
-    background-color: #27272A;
-    width: 4px;
-}
-QSplitter::handle:hover {
-    background-color: #3B82F6;
-}
+QMainWindow, QWidget { background-color: #18181B; color: #E4E4E7; font-family: 'Segoe UI', sans-serif; font-size: 12px; }
+QFrame#TopBar { background-color: #1E1E24; border: 1px solid #27272A; border-radius: 6px; }
+QGroupBox { border: 1px solid #27272A; border-radius: 6px; margin-top: 8px; padding-top: 12px; padding-bottom: 6px; padding-left: 8px; padding-right: 8px; background-color: #1E1E24; font-weight: bold; color: #A1A1AA; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }
+QComboBox { background-color: #27272A; border: 1px solid #3F3F46; border-radius: 4px; padding: 3px 8px; color: #F4F4F5; }
+QComboBox:disabled { background-color: #18181B; color: #52525B; border-color: #27272A; }
+QComboBox::drop-down { border: none; }
+QPushButton { background-color: #27272A; border: 1px solid #3F3F46; border-radius: 4px; padding: 4px 12px; color: #F4F4F5; font-weight: 600; }
+QPushButton:hover { background-color: #3F3F46; border-color: #52525B; }
+QPushButton:pressed { background-color: #18181B; }
+QPushButton#ScanBtn { background-color: #2563EB; border: 1px solid #3B82F6; color: #FFFFFF; }
+QPushButton#ScanBtn:hover { background-color: #1D4ED8; }
+QSplitter::handle { background-color: #27272A; width: 4px; }
+QSplitter::handle:hover { background-color: #3B82F6; }
 """
-
 
 class UartWorker(QThread):
     log_signal = pyqtSignal(str)
@@ -136,10 +85,9 @@ class UartWorker(QThread):
         self.status_signal.emit(False)
         self.log_signal.emit("[*] UART Disconnected.")
 
-
 class CanWorker(QThread):
     log_signal = pyqtSignal(str)
-    status_signal = pyqtSignal(int)  # 0: Stopped, 1: HW Online, 2: Mock Mode
+    status_signal = pyqtSignal(int)
     hw_lost_signal = pyqtSignal()
 
     def __init__(self, interface, channel, serial_baud, can_bitrate, view_mode="1-Line Smooth"):
@@ -152,7 +100,18 @@ class CanWorker(QThread):
         self.running = True
         self.bus = None
         self.ser = None
-        self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        # Khởi tạo UDP Socket TX
+        self.udp_tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        # Khởi tạo UDP Socket RX an toàn (Không bị lỗi thiếu socket)
+        self.udp_rx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_rx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.udp_rx_sock.bind((GATEWAY_RECV_IP, GATEWAY_RECV_PORT))
+            self.udp_rx_sock.settimeout(0.01)
+        except OSError:
+            pass
 
     def set_view_mode(self, mode):
         self.view_mode = mode
@@ -173,20 +132,53 @@ class CanWorker(QThread):
             if can_id == 0x300 and len(payload) >= 8:
                 return f"[{tag}] 0x{can_id:03X} | HEX: {hex_str} | Gear:{gear} Dist:{sensors} Err:0x{err:02X}"
             return f"[{tag}] 0x{can_id:03X} | DLC:{len(payload)} | HEX: {hex_str}"
-
         elif self.view_mode == "2-Line Compact":
             return (f"[{tag}] 0x{can_id:03X} | HEX: {hex_str} -> [Gear:{gear} | Dist:{sensors} | Err:0x{err:02X}]\n"
                     f"  BIT: {bit_str}")
-
         else:
             parsed_info = f"\n  └─> [Gear: {gear} | Dist: {sensors} | ErrMask: 0x{err:02X}]" if can_id == 0x300 else ""
             return (f"[{tag}] ID: 0x{can_id:03X} | DLC: {len(payload)} | HEX: {hex_str}\n"
                     f"  BIT: {bit_str}{parsed_info}")
 
     def forward_udp_if_needed(self, can_id, payload):
-        if can_id == 0x300 and len(payload) >= 8:
-            packet = struct.pack(">HBB", 0xAA55, 0x01, 8) + bytes(payload[:8])
-            self.udp_sock.sendto(packet, (QT_IP, QT_PORT))
+        try:
+            if can_id == 0x300: # Bản tin COM -> Gửi sang Qt Dashboard
+                packet = struct.pack(">HBB", 0xAA55, 0x01, len(payload)) + bytes(payload)
+                self.udp_tx_sock.sendto(packet, (QT_IP, QT_PORT))
+            elif can_id == 0x7E8: # Bản tin UDS Response -> Gửi sang Tester Script
+                packet = struct.pack(">H B", can_id, len(payload)) + bytes(payload)
+                self.udp_tx_sock.sendto(packet, (TESTER_IP, TESTER_PORT))
+        except Exception:
+            pass
+
+    def process_udp_rx(self):
+        try:
+            data, _ = self.udp_rx_sock.recvfrom(1024)
+            if len(data) >= 3:
+                can_id, dlc = struct.unpack(">H B", data[:3])
+                payload = data[3:3+dlc]
+                
+                if self.interface == "waveshare" and self.ser:
+                    is_ext = can_id > 0x7FF
+                    # Dành riêng cho Waveshare: KHÔNG CÓ CHECKSUM. 0xAA + Ctrl + ID + Payload + 0x55
+                    ctrl = (0xE0 if is_ext else 0xC0) | (dlc & 0x0F)
+                    if is_ext:
+                        id_bytes = list(can_id.to_bytes(4, byteorder='little'))
+                    else:
+                        id_bytes = [can_id & 0xFF, (can_id >> 8) & 0xFF]
+                    
+                    frame = bytes([0xAA, ctrl] + id_bytes + list(payload) + [0x55])
+                    self.ser.write(frame)
+                    self.log_signal.emit(self.format_frame_log(can_id, payload, "UDP_TX"))
+                
+                elif self.bus:
+                    msg = can.Message(arbitration_id=can_id, data=payload, is_extended_id=(can_id > 0x7FF))
+                    self.bus.send(msg)
+                    self.log_signal.emit(self.format_frame_log(can_id, payload, "UDP_TX"))
+        except socket.timeout:
+            pass
+        except Exception:
+            pass
 
     def send_waveshare_init(self, ser):
         rate_map = {
@@ -220,6 +212,8 @@ class CanWorker(QThread):
 
         buf = bytearray()
         while self.running:
+            self.process_udp_rx()
+            
             try:
                 waiting = self.ser.in_waiting
                 chunk = self.ser.read(waiting if waiting > 0 else 1)
@@ -286,9 +280,10 @@ class CanWorker(QThread):
 
         if self.interface == "mock":
             self.status_signal.emit(2)
-            self.log_signal.emit(f"[*] MOCK Generator Active -> UDP {QT_IP}:{QT_PORT}")
+            self.log_signal.emit(f"[*] MOCK Generator Active -> UDP Qt:{QT_PORT} | Tester:{TESTER_PORT}")
             mock_tick = 0
             while self.running:
+                self.process_udp_rx()
                 mock_tick = (mock_tick + 1) % 50
                 mock_payload = bytes([0, 15 + (mock_tick % 20), 13, 35, 62, 53, 66, 0x00])
                 self.forward_udp_if_needed(0x300, mock_payload)
@@ -303,11 +298,10 @@ class CanWorker(QThread):
 
             self.bus = can.interface.Bus(**kwargs)
             self.status_signal.emit(1)
-            self.log_signal.emit(
-                f"[*] HW Online: {self.interface} ({self.channel}) | CAN: {self.can_bitrate}"
-            )
+            self.log_signal.emit(f"[*] HW Online: {self.interface} ({self.channel}) | CAN: {self.can_bitrate}")
             while self.running:
-                msg = self.bus.recv(timeout=0.02)
+                self.process_udp_rx()
+                msg = self.bus.recv(timeout=0.01)
                 if msg:
                     self.log_signal.emit(self.format_frame_log(msg.arbitration_id, msg.data, "HW_CAN"))
                     self.forward_udp_if_needed(msg.arbitration_id, msg.data)
@@ -319,6 +313,11 @@ class CanWorker(QThread):
 
     def stop(self):
         self.running = False
+        try:
+            self.udp_tx_sock.close()
+            self.udp_rx_sock.close()
+        except Exception:
+            pass
         if self.ser and self.ser.is_open:
             try:
                 self.ser.close()
@@ -329,11 +328,11 @@ class CanWorker(QThread):
                 self.bus.shutdown()
             except Exception:
                 pass
-        self.udp_sock.close()
         self.status_signal.emit(0)
         self.log_signal.emit("[*] CAN Stream Stopped.")
 
 
+# --- GIỮ NGUYÊN PHẦN UI (GatewayApp) TỪ CODE CŨ CỦA BẠN ---
 class GatewayApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -354,7 +353,6 @@ class GatewayApp(QMainWindow):
         root_layout.setContentsMargins(8, 8, 8, 8)
         root_layout.setSpacing(6)
 
-        # ==================== THANH HEADER CHUNG (GLOBAL HARDWARE BAR) ====================
         top_bar = QFrame()
         top_bar.setObjectName("TopBar")
         top_bar.setFixedHeight(40)
@@ -371,7 +369,6 @@ class GatewayApp(QMainWindow):
         self.btn_global_scan = QPushButton("↻ Scan Hardware (USB / COM)")
         self.btn_global_scan.setObjectName("ScanBtn")
         self.btn_global_scan.setCursor(Qt.PointingHandCursor)
-        self.btn_global_scan.setToolTip("Quét đồng bộ toàn bộ thiết bị USB-UART và USB-CAN")
         self.btn_global_scan.clicked.connect(self.scan_all_hardware)
 
         top_layout.addWidget(lbl_title)
@@ -379,13 +376,11 @@ class GatewayApp(QMainWindow):
         top_layout.addWidget(self.lbl_hw_summary)
         top_layout.addStretch()
         top_layout.addWidget(self.btn_global_scan)
-
         root_layout.addWidget(top_bar)
 
-        # ==================== SPLITTER CHÍNH: 25% UART | 75% CAN ====================
         self.main_splitter = QSplitter(Qt.Horizontal)
 
-        # -------------------- NỬA TRÁI (25%): UART PANEL --------------------
+        # UART Panel
         uart_panel = QWidget()
         uart_panel_layout = QVBoxLayout(uart_panel)
         uart_panel_layout.setContentsMargins(0, 0, 4, 0)
@@ -397,12 +392,9 @@ class GatewayApp(QMainWindow):
         uart_vbox.setContentsMargins(8, 4, 8, 6)
         uart_vbox.setSpacing(6)
 
-        # Hàng 1 UART: Chọn Port & Baudrate
         uart_row1 = QHBoxLayout()
-        uart_row1.setSpacing(6)
         self.uart_port_combo = QComboBox()
         self.uart_port_combo.setMinimumWidth(85)
-
         self.uart_baud_combo = QComboBox()
         self.uart_baud_combo.addItems(["9600", "115200", "500000", "1000000", "2000000"])
         self.uart_baud_combo.setCurrentText("115200")
@@ -414,16 +406,12 @@ class GatewayApp(QMainWindow):
         uart_row1.addWidget(QLabel("Baud:"))
         uart_row1.addWidget(self.uart_baud_combo, 1)
 
-        # Hàng 2 UART: Nút điều khiển & Trạng thái kết nối
         uart_row2 = QHBoxLayout()
-        uart_row2.setSpacing(6)
         self.btn_uart_conn = QPushButton("Connect")
         self.btn_uart_conn.setMinimumWidth(85)
         self.btn_uart_conn.clicked.connect(self.toggle_uart)
-
         self.btn_uart_clear = QPushButton("Clear")
         self.btn_uart_clear.clicked.connect(lambda: self.uart_log.clear())
-
         self.lbl_uart_status = QLabel("● Disconnected")
         self.lbl_uart_status.setStyleSheet("color: #EF4444; font-weight: bold;")
 
@@ -441,15 +429,14 @@ class GatewayApp(QMainWindow):
         self.uart_log.setWordWrapMode(QTextOption.WrapAnywhere)
         self.uart_log.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.uart_log.setStyleSheet(
-            "background-color: #09090B; color: #22C55E; "
-            "border: 1px solid #27272A; border-radius: 6px; "
-            "font-family: 'Consolas', monospace; font-size: 12px; padding: 6px;"
+            "background-color: #09090B; color: #22C55E; border: 1px solid #27272A; "
+            "border-radius: 6px; font-family: 'Consolas', monospace; font-size: 12px; padding: 6px;"
         )
 
         uart_panel_layout.addWidget(uart_group)
         uart_panel_layout.addWidget(self.uart_log)
 
-        # -------------------- NỬA PHẢI (75%): CAN PANEL --------------------
+        # CAN Panel
         can_panel = QWidget()
         can_panel_layout = QVBoxLayout(can_panel)
         can_panel_layout.setContentsMargins(4, 0, 0, 0)
@@ -461,10 +448,7 @@ class GatewayApp(QMainWindow):
         can_vbox.setContentsMargins(8, 4, 8, 6)
         can_vbox.setSpacing(6)
 
-        # Hàng 1 CAN: Cấu hình phần cứng & Chế độ hiển thị
         can_row1 = QHBoxLayout()
-        can_row1.setSpacing(8)
-
         self.can_iface_combo = QComboBox()
         self.can_iface_combo.setMinimumWidth(110)
         self.can_iface_combo.currentTextChanged.connect(self.on_can_interface_changed)
@@ -501,18 +485,13 @@ class GatewayApp(QMainWindow):
         can_row1.addWidget(self.can_view_combo)
         can_row1.addStretch()
 
-        # Hàng 2 CAN: Nút Start/Stop, Clear & Trạng thái kết nối
         can_row2 = QHBoxLayout()
-        can_row2.setSpacing(8)
-
         self.btn_can_conn = QPushButton("Start CAN")
         self.btn_can_conn.setMinimumWidth(95)
         self.btn_can_conn.clicked.connect(self.toggle_can)
-
         self.btn_can_clear = QPushButton("Clear")
         self.btn_can_clear.setMinimumWidth(75)
         self.btn_can_clear.clicked.connect(lambda: self.can_log.clear())
-
         self.lbl_can_status = QLabel("● Stopped")
         self.lbl_can_status.setStyleSheet("color: #71717A; font-weight: bold;")
 
@@ -530,9 +509,8 @@ class GatewayApp(QMainWindow):
         self.can_log.setWordWrapMode(QTextOption.WrapAnywhere)
         self.can_log.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.can_log.setStyleSheet(
-            "background-color: #09090B; color: #38BDF8; "
-            "border: 1px solid #27272A; border-radius: 6px; "
-            "font-family: 'Consolas', monospace; font-size: 12px; padding: 6px;"
+            "background-color: #09090B; color: #38BDF8; border: 1px solid #27272A; "
+            "border-radius: 6px; font-family: 'Consolas', monospace; font-size: 12px; padding: 6px;"
         )
 
         can_panel_layout.addWidget(can_group)
@@ -540,8 +518,6 @@ class GatewayApp(QMainWindow):
 
         self.main_splitter.addWidget(uart_panel)
         self.main_splitter.addWidget(can_panel)
-
-        # Thiết lập tỷ lệ khung nhìn 1/3: 25% (UART) - 75% (CAN)
         self.main_splitter.setStretchFactor(0, 1)
         self.main_splitter.setStretchFactor(1, 3)
         self.main_splitter.setSizes([400, 1200])
@@ -563,11 +539,9 @@ class GatewayApp(QMainWindow):
         text_edit.moveCursor(QTextCursor.End)
 
     def scan_all_hardware(self):
-        """Quét tập trung toàn bộ phần cứng USB/COM và đồng bộ hóa cả 2 nhánh UART & CAN"""
         ports_info = list(serial.tools.list_ports.comports())
         active_ports = [p.device for p in ports_info]
 
-        # Cập nhật nhãn tóm tắt trên thanh Header chung
         if active_ports:
             ports_str = ", ".join(active_ports)
             self.lbl_hw_summary.setText(f"Active USB/COM ({len(active_ports)}): [{ports_str}]")
@@ -576,7 +550,6 @@ class GatewayApp(QMainWindow):
             self.lbl_hw_summary.setText("Active USB/COM (0): [None - Mock/Virtual Only]")
             self.lbl_hw_summary.setStyleSheet("color: #F59E0B; font-family: 'Consolas', monospace;")
 
-        # 1. Cập nhật bảng cổng COM bên UART
         prev_uart = self.uart_port_combo.currentText()
         self.uart_port_combo.clear()
         if active_ports:
@@ -586,7 +559,6 @@ class GatewayApp(QMainWindow):
             elif "COM3" in active_ports:
                 self.uart_port_combo.setCurrentText("COM3")
 
-        # 2. Cập nhật động danh sách Interface bên CAN (Rút USB là mất waveshare/slcan)
         prev_iface = self.can_iface_combo.currentText()
         self.can_iface_combo.blockSignals(True)
         self.can_iface_combo.clear()
@@ -603,7 +575,6 @@ class GatewayApp(QMainWindow):
             self.can_iface_combo.setCurrentIndex(0)
         self.can_iface_combo.blockSignals(False)
 
-        # 3. Đồng bộ lại danh sách kênh (Channel) theo Interface hiện tại
         self.on_can_interface_changed(self.can_iface_combo.currentText(), active_ports)
 
     def on_can_interface_changed(self, interface, pre_scanned_ports=None):
@@ -634,7 +605,6 @@ class GatewayApp(QMainWindow):
             self.can_sbaud_combo.setEnabled(False)
 
     def on_hardware_lost(self):
-        """Khi tuột cáp USB lúc đang chạy, tự động trả lại trạng thái nút và quét lại danh sách thiết bị"""
         if self.uart_thread and not self.uart_thread.isRunning():
             self.btn_uart_conn.setText("Connect")
         if self.can_thread and not self.can_thread.isRunning():
@@ -709,7 +679,6 @@ class GatewayApp(QMainWindow):
             self.can_thread.stop()
             self.can_thread.wait()
         event.accept()
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

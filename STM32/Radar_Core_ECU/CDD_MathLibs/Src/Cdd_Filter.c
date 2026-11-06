@@ -12,12 +12,12 @@
  */
 static void Sort_Array(uint16_t *arr, uint8_t size)
 {
-    for (uint8_t i = 0; i < size; i++) {
-        for (uint8_t j = 0; j < size - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
+    for (uint8_t i = 0U; i < size; i++) {
+        for (uint8_t j = 0U; j < size - i - 1U; j++) {
+            if (arr[j] > arr[j + 1U]) {
                 uint16_t temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
+                arr[j] = arr[j + 1U];
+                arr[j + 1U] = temp;
             }
         }
     }
@@ -44,10 +44,10 @@ uint16_t Math_Filter_Outlier(uint16_t raw_val, uint16_t min_limit, uint16_t max_
  */
 void Math_Filter_MedianInit(Math_Median_t *filter)
 {
-    filter->Index = 0;
-    filter->Is_Filled = 0;
-    for (uint8_t i = 0; i < MEDIAN_WINDOW_SIZE; i++) {
-        filter->Buffer[i] = 0;  
+    filter->Index = 0U;
+    filter->Is_Filled = 0U;
+    for (uint8_t i = 0U; i < MEDIAN_WINDOW_SIZE; i++) {
+        filter->Buffer[i] = 0U;  
     }
 }
 
@@ -60,20 +60,20 @@ uint16_t Math_Filter_MedianProcess(Math_Median_t *filter, uint16_t new_val)
     filter->Index++;
 
     if (filter->Index >= MEDIAN_WINDOW_SIZE) {
-        filter->Index = 0;
-        filter->Is_Filled = 1;
+        filter->Index = 0U;
+        filter->Is_Filled = 1U;
     }
 
     if (!filter->Is_Filled) 
         return new_val; // Chưa đủ mẫu trong cửa sổ thì trả về dữ liệu thực
 
     uint16_t temp[MEDIAN_WINDOW_SIZE];
-    for (uint8_t i = 0; i < MEDIAN_WINDOW_SIZE; i++) {
+    for (uint8_t i = 0U; i < MEDIAN_WINDOW_SIZE; i++) {
         temp[i] = filter->Buffer[i];
     }
 
     Sort_Array(temp, MEDIAN_WINDOW_SIZE);
-    return temp[MEDIAN_WINDOW_SIZE / 2];    // Lấy giá trị ở giữa sau khi sắp xếp
+    return temp[MEDIAN_WINDOW_SIZE / 2U];    // Lấy giá trị ở giữa sau khi sắp xếp
 }
 
 /**

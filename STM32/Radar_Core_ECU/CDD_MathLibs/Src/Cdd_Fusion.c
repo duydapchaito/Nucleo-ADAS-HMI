@@ -39,7 +39,7 @@ uint16_t Math_Fusion_VirtualCenter(uint16_t dist_left, uint16_t dist_right)
     uint16_t min_dist = (dist_left < dist_right) ? dist_left : dist_right;
 
     // Nếu cả 2 cảm biến đều ở xa tầm phát hiện (>200cm), coi như không gian thông thoáng
-    if (min_dist >= 200) {
+    if (min_dist >= 200U) {
         return min_dist;
     }
 
@@ -55,7 +55,7 @@ uint16_t Math_Fusion_VirtualCenter(uint16_t dist_left, uint16_t dist_right)
 void Math_Fusion_Init(uint16_t min_limit, uint16_t max_limit)
 {
     (void)min_limit;
-    for (uint8_t i = 0; i < MATH_HW_SENSORS_COUNT; i++)
+    for (uint8_t i = 0U; i < MATH_HW_SENSORS_COUNT; i++)
     {
         Math_Filter_MedianInit(&s_MedianFilters[i]);
         /* Khởi tạo Kalman: Q = 0.05f (Nhiễu nhỏ), R = 2.0f (Độ tin cậy cảm biến), P0 = 1.0f, X0 = max_limit */
@@ -110,7 +110,7 @@ void Math_Fusion_ProcessRadarArray(const uint32_t raw_ticks_4[MATH_HW_SENSORS_CO
                                     uint16_t out_dist_6[MATH_LOGIC_SENSORS_COUNT],
                                     uint8_t *out_err_mask_6)
 {
-    uint8_t err_fl = 0, err_fr = 0, err_rl = 0, err_rr = 0;
+    uint8_t err_fl = 0U, err_fr = 0U, err_rl = 0U, err_rr = 0U;
     uint8_t mask = 0x00U;
 
     /* 1. Xử lý lọc qua pipeline cho 4 mắt phần cứng đặt vào vị trí tương ứng: FL(0), FR(2), RL(3), RR(5) */

@@ -10,18 +10,18 @@
 
 /** @brief Mức điện áp logic của chân GPIO */
 typedef enum {
-    DIO_LEVEL_LOW = 0,
-    DIO_LEVEL_HIGH = 1
+    DIO_LEVEL_LOW = 0U,
+    DIO_LEVEL_HIGH = 1U
 } Dio_LevelType;
 
 /** @brief Danh mục các kênh DIO phần cứng được định nghĩa trong hệ thống Radar */
 typedef enum {
-    DIO_CHAN_BUZZER = 0,
-    DIO_CHAN_TRIG_FL,
-    DIO_CHAN_TRIG_FR,
-    DIO_CHAN_TRIG_RL,
-    DIO_CHAN_TRIG_RR,
-    DIO_CHAN_MAX
+    DIO_CHAN_BUZZER     = 0U,
+    DIO_CHAN_TRIG_FL    = 1U,
+    DIO_CHAN_TRIG_FR    = 2U,
+    DIO_CHAN_TRIG_RL    = 3U,
+    DIO_CHAN_TRIG_RR    = 4U,
+    DIO_CHAN_MAX        = 5U
 } Dio_ChannelType;
 
 /**

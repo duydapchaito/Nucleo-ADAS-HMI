@@ -1,14 +1,12 @@
 /**
  * @file    Cdd_Eeprom.c
- * @brief   Triển khai chi tiết logic điều khiển EEPROM AT24C02.
- * @details Thực thi cơ chế chia trang bộ nhớ vật lý, quản lý chu kỳ ghi nội bộ (tWR)
- *          kết hợp với tầng MCAL I2C và cơ chế điều phối thời gian thực của OS.
- * @version 1.0
+ * @brief   Triển khai điều khiển EEPROM AT24C02 an toàn đa nhiệm (Thread-safe qua Os_Nvm_Lock).
  */
 
 #include "Cdd_Eeprom.h"
 #include "Mcal_I2c.h"
 #include "Os.h"
+#include "Log.h"
 
 /* ==================================================================== */
 /* ĐỊNH NGHĨA THỜI GIAN VÀ CẤU HÌNH GIAO THỨC NỘI BỘ                     */
@@ -44,12 +42,15 @@ static Cdd_Eeprom_StatusType Cdd_Eeprom_WaitStandby(void)
  */
 Cdd_Eeprom_StatusType Cdd_Eeprom_Init(void)
 {
-    /* Kiểm tra ping thử 3 lần tới địa chỉ phần cứng để xác thực đường truyền vật lý */
-    if (Mcal_I2c_IsDeviceReady(CDD_EEPROM_I2C_ADDR, 3U, 10U) == MCAL_I2C_OK) {
-        OS_LOG_I("EEPROM: AT24C02 Ready at Addr 0x%02X", CDD_EEPROM_I2C_ADDR);
+    Os_Nvm_Lock();
+    Mcal_I2c_StatusType st = Mcal_I2c_IsDeviceReady(CDD_EEPROM_I2C_ADDR, 3U, 19U);
+    Os_Nvm_Unlock();
+
+    if (st == MCAL_I2C_OK) {
+        LOG_I("EEPROM: AT24C02 Ready at Addr 0x%02X", CDD_EEPROM_I2C_ADDR);
         return CDD_EEPROM_OK;
     }
-    OS_LOG_E("EEPROM: Hardware Not Responding!");
+    LOG_E("EEPROM: Hardware Not Responding!");
     return CDD_EEPROM_ERR_I2C;
 }
 
@@ -59,13 +60,16 @@ Cdd_Eeprom_StatusType Cdd_Eeprom_Init(void)
 Cdd_Eeprom_StatusType Cdd_Eeprom_WriteBuffer(uint8_t MemAddr, const uint8_t *pData, uint16_t Len)
 {
     /* Kiểm tra tính hợp lệ của tham số: Chống tràn dung lượng bộ nhớ 256 Byte */
-    if ((pData == NULL) || (Len == 0) || (((uint16_t)MemAddr + Len) > CDD_EEPROM_TOTAL_SIZE)) {
+    if ((pData == NULL) || (Len == 0U) || (((uint16_t)MemAddr + Len) > CDD_EEPROM_TOTAL_SIZE)) {
         return CDD_EEPROM_ERR_PARAM;
     }
+
+    Os_Nvm_Lock();
 
     uint8_t curr_addr = MemAddr;
     const uint8_t *p_curr_data = pData;
     uint16_t bytes_left = Len;
+    Cdd_Eeprom_StatusType ret = CDD_EEPROM_OK;
     
     /* Vòng lặp chia nhỏ dữ liệu thành từng khối vừa vặn với kích thước trang vật lý */
     while (bytes_left > 0U) 
@@ -85,12 +89,14 @@ Cdd_Eeprom_StatusType Cdd_Eeprom_WriteBuffer(uint8_t MemAddr, const uint8_t *pDa
                             chunk_size, 
                             EEPROM_I2C_TIMEOUT_MS) != MCAL_I2C_OK) 
         {
-            return CDD_EEPROM_ERR_I2C;
+            ret = CDD_EEPROM_ERR_I2C;
+            break;
         }
 
         /* Chờ chip hoàn tất ghi trang nội bộ trước khi thực hiện giao dịch tiếp theo */
         if (Cdd_Eeprom_WaitStandby() != CDD_EEPROM_OK) {
-            return CDD_EEPROM_ERR_I2C;
+            ret = CDD_EEPROM_ERR_I2C;
+            break;
         }
 
         /* Cập nhật con trỏ dữ liệu và địa chỉ sang phân đoạn tiếp theo */
@@ -99,7 +105,8 @@ Cdd_Eeprom_StatusType Cdd_Eeprom_WriteBuffer(uint8_t MemAddr, const uint8_t *pDa
         bytes_left -= chunk_size;
     }
 
-    return CDD_EEPROM_OK;
+    Os_Nvm_Unlock();
+    return ret;
 }
 
 /**
@@ -112,16 +119,15 @@ Cdd_Eeprom_StatusType Cdd_Eeprom_ReadBuffer(uint8_t MemAddr, uint8_t *pData, uin
         return CDD_EEPROM_ERR_PARAM;
     }
 
+    Os_Nvm_Lock();
     /* Đọc dữ liệu tuần tự trực tiếp qua MCAL mà không cần băm trang */
-    if (Mcal_I2c_ReadMem(CDD_EEPROM_I2C_ADDR, 
-                        (uint16_t)MemAddr, 
-                        EEPROM_MEM_ADDR_SIZE, 
-                        pData, 
-                        Len, 
-                        EEPROM_I2C_TIMEOUT_MS) != MCAL_I2C_OK) 
-    {
-        return CDD_EEPROM_ERR_I2C;
-    }
+    Mcal_I2c_StatusType st = Mcal_I2c_ReadMem(CDD_EEPROM_I2C_ADDR, 
+                            (uint16_t)MemAddr, 
+                            EEPROM_MEM_ADDR_SIZE, 
+                            pData, 
+                            Len, 
+                            EEPROM_I2C_TIMEOUT_MS); 
+    Os_Nvm_Unlock();
 
-    return CDD_EEPROM_OK;
+    return (st == MCAL_I2C_OK) ? CDD_EEPROM_OK : CDD_EEPROM_ERR_I2C;
 }

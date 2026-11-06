@@ -21,10 +21,10 @@
 
 /** @brief Các mức cảnh báo ứng với màu hiển thị trên màn hình HMI Qt */
 typedef enum {
-    RADAR_WARN_GREEN = 0,   /* Xanh lá: An toàn     - Tắt còi */
-    RADAR_WARN_YELLOW,      /* Vàng:    Chú ý       - Bíp chậm (250ms) */
-    RADAR_WARN_ORANGE,      /* Cam:     Gần         - Bíp nhanh (100ms) */
-    RADAR_WARN_RED          /* Đỏ:      Nguy hiểm   - Kêu liên hồi liên tục */
+    RADAR_WARN_GREEN    = 0U,   /* Xanh lá: An toàn     - Tắt còi */
+    RADAR_WARN_YELLOW   = 1U,   /* Vàng:    Chú ý       - Bíp chậm (250ms) */
+    RADAR_WARN_ORANGE   = 2U,   /* Cam:     Gần         - Bíp nhanh (100ms) */
+    RADAR_WARN_RED      = 3U    /* Đỏ:      Nguy hiểm   - Kêu liên hồi liên tục */
 } Swc_Radar_WarnLevelType;
 
 /**
